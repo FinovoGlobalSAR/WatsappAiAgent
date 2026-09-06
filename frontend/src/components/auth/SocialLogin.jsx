@@ -29,6 +29,7 @@ export default function SocialLogin() {
           text-[#193b3e]
           hover:bg-[#f7fbfb]
           transition
+          cursor-pointer
         "
       >
         <svg

@@ -66,7 +66,7 @@ export default function AuthInput({
             onClick={() =>
               setShowPassword((prev) => !prev)
             }
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-[#84999c] hover:text-[#087f84]"
+            className="cursor-pointer absolute right-4 top-1/2 -translate-y-1/2 text-[#84999c] hover:text-[#087f84]"
           >
             {showPassword ? (
               <EyeOff size={18} />

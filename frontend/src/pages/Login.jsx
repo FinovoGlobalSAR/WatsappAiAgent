@@ -100,14 +100,14 @@ export default function Login() {
                     className="flex items-center gap-2 text-[12px] text-[#60777a]"
                   >
                     <span
-                      className={`w-[19px] h-[19px] rounded-md border flex items-center justify-center transition ${
+                      className={`cursor-pointer w-[19px] h-[19px] rounded-md border flex items-center justify-center transition ${
                         remember
                           ? "bg-[#0d9296] border-[#0d9296]"
                           : "border-[#cbdadb]"
                       }`}
                     >
                       {remember && (
-                        <Check size={13} className="text-white" />
+                        <Check size={13} className="cursor-pointer text-white" />
                       )}
                     </span>
                     Remember me
@@ -124,7 +124,7 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="primary-button w-full h-[52px] rounded-xl bg-[#0c9297] hover:bg-[#087e83] text-white text-[13px] font-semibold flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="cursor-pointer primary-button w-full h-[52px] rounded-xl bg-[#0c9297] hover:bg-[#087e83] text-white text-[13px] font-semibold flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <>
