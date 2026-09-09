@@ -9,8 +9,14 @@ const {
   verifyRefreshToken,
   hashToken
 } = require('../utils/jwt');
-const { issueVerificationOtp, verifyEmailOtp } = require('./otpService');
-const { sendVerificationOtp } = require('./emailService');
+const {
+  issueVerificationOtp,
+  verifyEmailOtp,
+  issuePasswordResetOtp,
+  verifyPasswordResetOtp,
+  validateAndConsumeResetToken
+} = require('./otpService');
+const emailService = require('./emailService');
 const { AppError } = require('../utils/errors');
 
 async function register({ firstName, lastName, email, password }) {
@@ -37,7 +43,7 @@ async function register({ firstName, lastName, email, password }) {
   }
 
   try {
-    await sendVerificationOtp({
+    await emailService.sendVerificationOtp({
       to: user.email,
       firstName: user.first_name,
       otp: otpDetails.otp,
@@ -96,7 +102,7 @@ async function resendOtp({ email }) {
   }
 
   try {
-    await sendVerificationOtp({
+    await emailService.sendVerificationOtp({
       to: user.email,
       firstName: user.first_name,
       otp: otpDetails.otp,
@@ -245,6 +251,98 @@ async function logout({ refreshToken, userId, allDevices }) {
   }
 }
 
+async function forgotPassword({ email }) {
+  const connection = await pool.getConnection();
+  let user;
+  let otpDetails;
+
+  try {
+    await connection.beginTransaction();
+
+    user = await User.findByEmail(email, connection);
+    if (!user) throw new AppError(404, 'Account not found.', 'USER_NOT_FOUND');
+    if (user.status !== 'ACTIVE') throw new AppError(403, 'This account is not active.', 'ACCOUNT_NOT_ACTIVE');
+
+    otpDetails = await issuePasswordResetOtp(user, connection);
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+
+  try {
+    await emailService.sendPasswordResetOtp({
+      to: user.email,
+      firstName: user.first_name,
+      otp: otpDetails.otp,
+      expiresInMinutes: otpDetails.expiresInMinutes
+    });
+  } catch (error) {
+    throw new AppError(503, 'A password reset OTP was generated, but the email could not be sent. Please try again later.', 'EMAIL_SEND_FAILED');
+  }
+
+  return { email: user.email, expiresInMinutes: otpDetails.expiresInMinutes };
+}
+
+async function verifyResetOtp({ email, otp }) {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const user = await User.findByEmail(email, connection);
+    if (!user) throw new AppError(404, 'Account not found.', 'USER_NOT_FOUND');
+    if (user.status !== 'ACTIVE') throw new AppError(403, 'This account is not active.', 'ACCOUNT_NOT_ACTIVE');
+
+    const result = await verifyPasswordResetOtp(user, otp, connection);
+
+    await connection.commit();
+    return { email: user.email, resetToken: result.resetToken };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+async function resetPassword({ email, resetToken, otp, newPassword }) {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    let user = null;
+    if (email) {
+      user = await User.findByEmail(email, connection);
+      if (!user) throw new AppError(404, 'Account not found.', 'USER_NOT_FOUND');
+      if (user.status !== 'ACTIVE') throw new AppError(403, 'This account is not active.', 'ACCOUNT_NOT_ACTIVE');
+    }
+
+    const resetRecord = await validateAndConsumeResetToken({ user, resetToken, otp, connection });
+
+    if (!user) {
+      user = await User.findById(resetRecord.user_id, connection);
+      if (!user) throw new AppError(404, 'Account not found.', 'USER_NOT_FOUND');
+      if (user.status !== 'ACTIVE') throw new AppError(403, 'This account is not active.', 'ACCOUNT_NOT_ACTIVE');
+    }
+
+    const newPasswordHash = await hashPassword(newPassword);
+    await User.updatePassword(user.id, newPasswordHash, connection);
+
+    // Invalidate all active sessions for this user across all devices
+    await RefreshToken.revokeAllByUserId(user.id, connection);
+
+    await connection.commit();
+    return { email: user.email };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
 function sanitizeUser(user) {
   return {
     id: user.id,
@@ -266,5 +364,9 @@ module.exports = {
   login,
   refreshTokens,
   logout,
+  forgotPassword,
+  verifyResetOtp,
+  resetPassword,
   sanitizeUser
 };
+

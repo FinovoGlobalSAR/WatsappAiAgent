@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Car Rental Platform - API Testing Client</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header>
+    <a href="/index.html" class="brand">
+      Car Rental Platform <span class="brand-badge">API Client</span>
+    </a>
+    <nav>
+      <a href="/register.html">Register</a>
+      <a href="/verify.html">Verify OTP</a>
+      <a href="/login.html">Login</a>
+      <a href="/dashboard.html">Dashboard</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="card card-wide">
+      <h1 class="card-title">Car Rental Platform — Backend Test Client</h1>
+      <p class="card-subtitle">
+        Interactive testing interface communicating with production-grade REST APIs (Node.js + Express + MySQL).
+      </p>
+
+      <div style="margin: 1.5rem 0; display: flex; flex-direction: column; gap: 0.75rem;">
+        <div style="padding: 1rem; background: #0f172a; border: 1px solid var(--surface-border); border-radius: var(--radius);">
+          <strong>1. Register</strong> — Create a new customer account and generate verification OTP.
+        </div>
+        <div style="padding: 1rem; background: #0f172a; border: 1px solid var(--surface-border); border-radius: var(--radius);">
+          <strong>2. Verify OTP</strong> — Confirm account email using cryptographically secure hashed OTP.
+        </div>
+        <div style="padding: 1rem; background: #0f172a; border: 1px solid var(--surface-border); border-radius: var(--radius);">
+          <strong>3. Login</strong> — Authenticate with email/password to receive JWT access and refresh tokens.
+        </div>
+        <div style="padding: 1rem; background: #0f172a; border: 1px solid var(--surface-border); border-radius: var(--radius);">
+          <strong>4. Dashboard</strong> — Access protected <code>/me</code> profile, test token rotation, and test role-based <code>/admin</code> access.
+        </div>
+      </div>
+
+      <div class="actions-panel" style="justify-content: center;">
+        <a href="/register.html" class="btn btn-primary" style="width: auto;">Create Account</a>
+        <a href="/login.html" class="btn btn-secondary">Log In</a>
+        <a href="/dashboard.html" class="btn btn-secondary">Go to Dashboard</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    Car Rental Platform Backend API &copy; 2026. Production Grade Architecture.
+  </footer>
+  <script src="/js/auth.js"></script>
+</body>
+</html>

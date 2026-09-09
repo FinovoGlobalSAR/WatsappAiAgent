@@ -19,10 +19,12 @@ async function findById(id, connection = pool) {
 }
 
 async function create(user, connection = pool) {
+  const role = user.role || 'CUSTOMER';
+  const status = user.status || 'ACTIVE';
   const [result] = await connection.query(
     `INSERT INTO users (first_name, last_name, email, password_hash, role, status)
-     VALUES (?, ?, ?, ?, 'CUSTOMER', 'ACTIVE')`,
-    [user.firstName, user.lastName, user.email, user.passwordHash]
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [user.firstName, user.lastName, user.email, user.passwordHash, role, status]
   );
   return findById(result.insertId, connection);
 }
@@ -35,4 +37,22 @@ async function markEmailVerified(userId, connection = pool) {
   return findById(userId, connection);
 }
 
-module.exports = { findByEmail, findById, create, markEmailVerified };
+async function updateRole(userId, role, connection = pool) {
+  await connection.query(
+    `UPDATE users SET role = ? WHERE id = ?`,
+    [role, userId]
+  );
+  return findById(userId, connection);
+}
+
+async function updatePassword(userId, passwordHash, connection = pool) {
+  await connection.query(
+    `UPDATE users SET password_hash = ? WHERE id = ?`,
+    [passwordHash, userId]
+  );
+  return findById(userId, connection);
+}
+
+module.exports = { findByEmail, findById, create, markEmailVerified, updateRole, updatePassword };
+
+

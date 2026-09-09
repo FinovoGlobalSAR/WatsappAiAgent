@@ -5,7 +5,10 @@ const {
   validateResendOtp,
   validateLogin,
   validateRefreshToken,
-  validateLogout
+  validateLogout,
+  validateForgotPassword,
+  validateVerifyResetOtp,
+  validateResetPassword
 } = require('../validators/authValidator');
 const { AppError } = require('../utils/errors');
 
@@ -133,6 +136,66 @@ async function getMe(req, res, next) {
   }
 }
 
+async function forgotPassword(req, res, next) {
+  try {
+    const { errors, value } = validateForgotPassword(req.body);
+    if (errors.length) {
+      const error = new AppError(400, 'Request validation failed.', 'VALIDATION_ERROR');
+      error.details = errors;
+      throw error;
+    }
+
+    const data = await authService.forgotPassword(value);
+    res.status(200).json({
+      success: true,
+      message: 'A password reset OTP has been sent to your email.',
+      data
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function verifyResetOtp(req, res, next) {
+  try {
+    const { errors, value } = validateVerifyResetOtp(req.body);
+    if (errors.length) {
+      const error = new AppError(400, 'Request validation failed.', 'VALIDATION_ERROR');
+      error.details = errors;
+      throw error;
+    }
+
+    const data = await authService.verifyResetOtp(value);
+    res.status(200).json({
+      success: true,
+      message: 'Password reset OTP verified successfully.',
+      data
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function resetPassword(req, res, next) {
+  try {
+    const { errors, value } = validateResetPassword(req.body);
+    if (errors.length) {
+      const error = new AppError(400, 'Request validation failed.', 'VALIDATION_ERROR');
+      error.details = errors;
+      throw error;
+    }
+
+    const data = await authService.resetPassword(value);
+    res.status(200).json({
+      success: true,
+      message: 'Password reset successful. Please log in with your new password.',
+      data
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   register,
   verifyEmail,
@@ -140,5 +203,9 @@ module.exports = {
   login,
   refreshToken,
   logout,
-  getMe
+  getMe,
+  forgotPassword,
+  verifyResetOtp,
+  resetPassword
 };
+

@@ -79,10 +79,33 @@ const refreshLimiter = createRateLimiter({
   message: 'Too many token refresh attempts. Please try again later.'
 });
 
+const FORGOT_PASSWORD_WINDOW_MS = 15 * 60 * 1000;
+const FORGOT_PASSWORD_MAX = 5;
+
+const forgotPasswordLimiter = createRateLimiter({
+  windowMs: FORGOT_PASSWORD_WINDOW_MS,
+  max: FORGOT_PASSWORD_MAX,
+  keyPrefix: 'forgot-password',
+  message: 'Too many password reset requests. Please try again later.'
+});
+
+const RESET_PASSWORD_WINDOW_MS = 15 * 60 * 1000;
+const RESET_PASSWORD_MAX = 10;
+
+const resetPasswordLimiter = createRateLimiter({
+  windowMs: RESET_PASSWORD_WINDOW_MS,
+  max: RESET_PASSWORD_MAX,
+  keyPrefix: 'reset-password',
+  message: 'Too many password reset attempts. Please try again later.'
+});
+
 module.exports = {
   createRateLimiter,
   verifyEmailLimiter,
   resendOtpLimiter,
   loginLimiter,
-  refreshLimiter
+  refreshLimiter,
+  forgotPasswordLimiter,
+  resetPasswordLimiter
 };
+

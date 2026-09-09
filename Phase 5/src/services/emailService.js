@@ -36,8 +36,31 @@ async function sendVerificationOtp({ to, firstName, otp, expiresInMinutes }) {
   }
 }
 
+async function sendPasswordResetOtp({ to, firstName, otp, expiresInMinutes }) {
+  const transport = createTransport();
+  try {
+    return await transport.sendMail({
+      from: env.email.from || env.email.user,
+      to,
+      subject: 'Reset your car rental platform password',
+      text: `Hello ${firstName},\n\nWe received a request to reset your car rental platform password.\n\nUse this one-time code to reset your password: ${otp}\n\nThis code expires in ${expiresInMinutes} minutes and can only be used once.\n\nDo not share this code with anyone. We will never ask you for it by phone or chat.\n\nIf you did not request a password reset, you can safely ignore this email. Your password will remain unchanged.`,
+      html: `<p>Hello ${escapeHtml(firstName)},</p><p>We received a request to reset your car rental platform password.</p><p>Use this one-time code to reset your password: <strong>${otp}</strong></p><p>This code expires in ${expiresInMinutes} minutes and can only be used once.</p><p>Do not share this code with anyone. We will never ask you for it by phone or chat.</p><p>If you did not request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>`
+    });
+  } catch (error) {
+    console.error('[SMTP ERROR]', {
+      message: error?.message,
+      code: error?.code,
+      command: error?.command,
+      response: error?.response,
+      responseCode: error?.responseCode
+    });
+    throw error;
+  }
+}
+
 function escapeHtml(value) {
   return String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
 }
 
-module.exports = { sendVerificationOtp };
+module.exports = { sendVerificationOtp, sendPasswordResetOtp };
+

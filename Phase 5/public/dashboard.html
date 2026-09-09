@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Car Rental Platform</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header>
+    <a href="/index.html" class="brand">
+      Car Rental Platform <span class="brand-badge">API Client</span>
+    </a>
+    <nav>
+      <a href="/dashboard.html" class="active">Dashboard</a>
+      <a href="#" id="logoutBtn" style="color: #ef4444;">Logout</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="card card-wide">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+        <div>
+          <h1 class="card-title" id="userName">User Profile</h1>
+          <p class="card-subtitle" id="userEmail">Loading authenticated session...</p>
+        </div>
+        <span id="userRole" class="badge">ROLE</span>
+      </div>
+
+      <div id="alertBox" class="alert"></div>
+
+      <table class="profile-table" id="profileTable">
+        <tbody>
+          <tr>
+            <td>User ID</td>
+            <td id="userId">—</td>
+          </tr>
+          <tr>
+            <td>Email Verification</td>
+            <td><span id="userVerified" class="badge">—</span></td>
+          </tr>
+          <tr>
+            <td>Account Status</td>
+            <td><span id="userStatus" class="badge">—</span></td>
+          </tr>
+          <tr>
+            <td>Created At</td>
+            <td id="userCreatedAt">—</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 style="font-size: 1.1rem; margin-top: 1.5rem; margin-bottom: 0.5rem;">API Testing &amp; Operations</h2>
+      <div class="actions-panel">
+        <button type="button" id="testAdminBtn" class="btn btn-secondary">Test Admin Endpoint (/admin/dashboard)</button>
+        <button type="button" id="rotateTokenBtn" class="btn btn-secondary">Rotate Refresh Token (/refresh)</button>
+        <button type="button" id="logoutAllBtn" class="btn btn-danger">Logout All Devices</button>
+      </div>
+
+      <pre id="outputBox" class="output-box"></pre>
+    </div>
+  </main>
+
+  <footer>
+    Car Rental Platform Backend API &copy; 2026.
+  </footer>
+  <script src="/js/auth.js"></script>
+</body>
+</html>
