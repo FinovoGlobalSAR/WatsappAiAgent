@@ -4,28 +4,28 @@ Production-oriented backend foundation for a B2B SaaS and white-label car-rental
 
 ## Stack
 
-- **Runtime**: Node.js (>=20)
-- **Web Framework**: Express.js 5
-- **Database**: MySQL 8+ (`mysql2` connection pool)
-- **Language**: JavaScript (ES2022+ / CommonJS)
-- **Architecture**: MVC + Service Layer
-- **API Style**: REST API with standardized JSON envelope
-- **Testing Frontend**: HTML5, CSS3, Vanilla JS (Fetch API)
+* **Runtime**: Node.js (>=20)
+* **Web Framework**: Express.js 5
+* **Database**: MySQL 8+ (`mysql2` connection pool)
+* **Language**: JavaScript (ES2022+ / CommonJS)
+* **Architecture**: MVC + Service Layer
+* **API Style**: REST API with standardized JSON envelope
+* **Testing Frontend**: HTML5, CSS3, Vanilla JS (Fetch API)
 
 ## Architecture
 
 ```text
 Client (Web / Mobile / React / Testing Client)
   ↓
-Routes (`src/routes/*`)
+Routes (`src/routes/\*`)
   ↓
-Middleware (`src/middleware/*` — Auth, Roles, Rate Limiting, Centralized Error Handling)
+Middleware (`src/middleware/\*` — Auth, Roles, Rate Limiting, Centralized Error Handling)
   ↓
-Controllers (`src/controllers/*` — Thin HTTP layer, validation response formatting)
+Controllers (`src/controllers/\*` — Thin HTTP layer, validation response formatting)
   ↓
-Services (`src/services/*` — Pure business logic, OTP generation, token rotation)
+Services (`src/services/\*` — Pure business logic, OTP generation, token rotation)
   ↓
-Models (`src/models/*` — Data access layer, parameterized SQL queries)
+Models (`src/models/\*` — Data access layer, parameterized SQL queries)
   ↓
 MySQL (InnoDB with transactional safety)
 ```
@@ -59,35 +59,35 @@ car-rental-platform/
 │   ├── validators/
 │   │   └── authValidator.js     # Server-side schema and input validation
 │   ├── utils/
-│   │   ├── jwt.js               # Access & refresh token signing, verification, SHA-256 hash
+│   │   ├── jwt.js               # Access \& refresh token signing, verification, SHA-256 hash
 │   │   ├── password.js          # Crypto scrypt password hashing and timing-safe verification
-│   │   ├── otp.js               # Cryptographic 6-digit OTP generator & scrypt hashing
+│   │   ├── otp.js               # Cryptographic 6-digit OTP generator \& scrypt hashing
 │   │   └── errors.js            # Custom AppError class
 │   ├── app.js                   # Express application setup, security headers, static serving
 │   └── server.js                # Server entry point and graceful shutdown handlers
-├── public/
+├── Frontend/
 │   ├── css/
 │   │   └── style.css            # Clean modern styles for the testing client
 │   ├── js/
-│   │   └── auth.js              # Vanilla JS API client with auto-refresh & page handlers
+│   │   └── auth.js              # Vanilla JS API client with auto-refresh \& page handlers
 │   ├── index.html               # Testing landing page
 │   ├── register.html            # Registration form
 │   ├── verify.html              # 6-digit OTP verification with resend cooldown
 │   ├── login.html               # Login form
-│   └── dashboard.html           # Authenticated user dashboard, role tester & token rotater
+│   └── dashboard.html           # Authenticated user dashboard, role tester \& token rotater
 ├── tests/
 │   └── auth/
-│       ├── registration.test.js      # Registration service & duplicate handling
+│       ├── registration.test.js      # Registration service \& duplicate handling
 │       ├── registrationHttp.test.js  # Registration HTTP endpoints
-│       ├── emailVerification.test.js # OTP verification service & policy
+│       ├── emailVerification.test.js # OTP verification service \& policy
 │       ├── emailVerificationHttp.test.js # OTP verification HTTP routes
 │       ├── login.test.js             # Login service, credential check, status checks
-│       ├── loginHttp.test.js         # Login HTTP route & error envelopes
+│       ├── loginHttp.test.js         # Login HTTP route \& error envelopes
 │       ├── jwtAuth.test.js           # JWT utilities, requireAuth, token rotation
 │       ├── jwtHttp.test.js           # Protected /me, /refresh, /logout HTTP
 │       ├── roleAuth.test.js          # requireRole middleware unit tests
 │       ├── roleHttp.test.js          # Admin role-protected HTTP endpoints
-│       ├── frontendHttp.test.js      # Static frontend pages & assets serving
+│       ├── frontendHttp.test.js      # Static frontend pages \& assets serving
 │       ├── validator.test.js         # Input validation test suite
 │       ├── rateLimit.test.js         # Rate limiting enforcement
 │       ├── otp.test.js               # Cryptographic OTP unit tests
@@ -101,7 +101,7 @@ car-rental-platform/
 └── README.md
 ```
 
-## Setup & Running
+## Setup \& Running
 
 1. **Install Node.js 20+**.
 2. **Install dependencies**:
@@ -115,28 +115,28 @@ Ensure `.env` exists (copy from `.env.example` if needed) and specify your MySQL
 
 ```ini
 PORT=5000
-NODE_ENV=development
+NODE\_ENV=development
 
 # MySQL
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=car_rental_platform
-DB_USER=root
-DB_PASSWORD=your_mysql_password
+DB\_HOST=localhost
+DB\_PORT=3306
+DB\_NAME=car\_rental\_platform
+DB\_USER=root
+DB\_PASSWORD=your\_mysql\_password
 
 # JWT Secrets
-JWT_ACCESS_SECRET=your_jwt_access_secret_here
-JWT_REFRESH_SECRET=your_jwt_refresh_secret_here
-JWT_ACCESS_EXPIRES_IN=15m
-JWT_REFRESH_EXPIRES_IN_DAYS=7
+JWT\_ACCESS\_SECRET=your\_jwt\_access\_secret\_here
+JWT\_REFRESH\_SECRET=your\_jwt\_refresh\_secret\_here
+JWT\_ACCESS\_EXPIRES\_IN=15m
+JWT\_REFRESH\_EXPIRES\_IN\_DAYS=7
 
 # Email Service (SMTP)
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_SECURE=false
-EMAIL_USER=your_email@example.com
-EMAIL_PASSWORD=your_app_password
-EMAIL_FROM=your_email@example.com
+EMAIL\_HOST=smtp.gmail.com
+EMAIL\_PORT=587
+EMAIL\_SECURE=false
+EMAIL\_USER=your\_email@example.com
+EMAIL\_PASSWORD=your\_app\_password
+EMAIL\_FROM=your\_email@example.com
 ```
 
 4. **Run Migrations**:
@@ -155,30 +155,31 @@ npm run dev
 
 The server will be running at `http://localhost:5000`.
 
----
+\---
 
 ## Testing Frontend Client (Phase 8)
 
 A lightweight testing client is served directly by Express:
 
-- **Landing Page**: `http://localhost:5000/`
-- **Register**: `http://localhost:5000/register.html`
-- **Verify Email**: `http://localhost:5000/verify.html`
-- **Login**: `http://localhost:5000/login.html` (Includes "Forgot Password?" link)
-- **Forgot Password**: `http://localhost:5000/forgot-password` (or `/forgot-password.html`)
-- **Reset Password**: `http://localhost:5000/reset-password` (or `/reset-password.html`)
-- **Dashboard**: `http://localhost:5000/dashboard.html`
+* **Landing Page**: `http://localhost:5000/`
+* **Register**: `http://localhost:5000/register.html`
+* **Verify Email**: `http://localhost:5000/verify.html`
+* **Login**: `http://localhost:5000/login.html` (Includes "Forgot Password?" link)
+* **Forgot Password**: `http://localhost:5000/forgot-password` (or `/forgot-password.html`)
+* **Reset Password**: `http://localhost:5000/reset-password` (or `/reset-password.html`)
+* **Dashboard**: `http://localhost:5000/dashboard.html`
 
 ### Features:
-- Form submission with client error and success alerts.
-- Automatic OTP resend cooldown timer (60s).
-- Two-step password reset with OTP verification and new password setting.
-- Session storage and automatic token refresh when access token expires.
-- Interactive **"Test Admin Endpoint"** button to verify Role-Based Access Control.
-- Interactive **"Rotate Refresh Token"** button demonstrating zero-downtime token rotation.
-- **"Logout"** (single device) and **"Logout All Devices"** buttons.
 
----
+* Form submission with client error and success alerts.
+* Automatic OTP resend cooldown timer (60s).
+* Two-step password reset with OTP verification and new password setting.
+* Session storage and automatic token refresh when access token expires.
+* Interactive **"Test Admin Endpoint"** button to verify Role-Based Access Control.
+* Interactive **"Rotate Refresh Token"** button demonstrating zero-downtime token rotation.
+* **"Logout"** (single device) and **"Logout All Devices"** buttons.
+
+\---
 
 ## API Documentation
 
@@ -187,6 +188,7 @@ A lightweight testing client is served directly by Express:
 All endpoints return a uniform envelope:
 
 **Success**:
+
 ```json
 {
   "success": true,
@@ -196,73 +198,79 @@ All endpoints return a uniform envelope:
 ```
 
 **Error**:
+
 ```json
 {
   "success": false,
   "message": "Error description",
   "data": null,
-  "errors": [
+  "errors": \[
     { "field": "email", "message": "A valid email address is required." }
   ]
 }
 ```
 
----
+\---
 
 ### Authentication Endpoints (`/api/v1/auth`)
 
-| Method | Endpoint | Description | Auth Required |
-|---|---|---|---|
-| `POST` | `/api/v1/auth/register` | Register new customer account | No |
-| `POST` | `/api/v1/auth/verify-email` | Verify email with 6-digit OTP | No (Rate Limited) |
-| `POST` | `/api/v1/auth/resend-otp` | Resend verification OTP (60s cooldown) | No (Rate Limited) |
-| `POST` | `/api/v1/auth/login` | Login with email/password, issues tokens | No (Rate Limited) |
-| `POST` | `/api/v1/auth/refresh` | Rotate refresh token and issue new access token | No (Rate Limited) |
-| `POST` | `/api/v1/auth/forgot-password` | Request 6-digit password reset OTP | No (Rate Limited) |
-| `POST` | `/api/v1/auth/verify-reset-otp` | Verify password reset OTP, returns resetToken | No (Rate Limited) |
-| `POST` | `/api/v1/auth/reset-password` | Set new password, invalidates OTP & sessions | No (Rate Limited) |
-| `POST` | `/api/v1/auth/logout` | Invalidate refresh token (optional `allDevices: true`) | Optional Bearer |
-| `GET` | `/api/v1/auth/me` | Fetch authenticated user profile | Bearer Token |
+|Method|Endpoint|Description|Auth Required|
+|-|-|-|-|
+|`POST`|`/api/v1/auth/register`|Register new customer account|No|
+|`POST`|`/api/v1/auth/verify-email`|Verify email with 6-digit OTP|No (Rate Limited)|
+|`POST`|`/api/v1/auth/resend-otp`|Resend verification OTP (60s cooldown)|No (Rate Limited)|
+|`POST`|`/api/v1/auth/login`|Login with email/password, issues tokens|No (Rate Limited)|
+|`POST`|`/api/v1/auth/refresh`|Rotate refresh token and issue new access token|No (Rate Limited)|
+|`POST`|`/api/v1/auth/forgot-password`|Request 6-digit password reset OTP|No (Rate Limited)|
+|`POST`|`/api/v1/auth/verify-reset-otp`|Verify password reset OTP, returns resetToken|No (Rate Limited)|
+|`POST`|`/api/v1/auth/reset-password`|Set new password, invalidates OTP \& sessions|No (Rate Limited)|
+|`POST`|`/api/v1/auth/logout`|Invalidate refresh token (optional `allDevices: true`)|Optional Bearer|
+|`GET`|`/api/v1/auth/me`|Fetch authenticated user profile|Bearer Token|
 
----
+\---
 
-### Admin & Role-Protected Endpoints (`/api/v1/admin`)
+### Admin \& Role-Protected Endpoints (`/api/v1/admin`)
 
-| Method | Endpoint | Description | Auth Required | Required Role |
-|---|---|---|---|---|
-| `GET` | `/api/v1/admin/dashboard` | Administrative overview | Bearer Token | `ADMIN` |
-| `GET` | `/api/v1/admin/users` | List registered platform users (sanitized) | Bearer Token | `ADMIN` |
+|Method|Endpoint|Description|Auth Required|Required Role|
+|-|-|-|-|-|
+|`GET`|`/api/v1/admin/dashboard`|Administrative overview|Bearer Token|`ADMIN`|
+|`GET`|`/api/v1/admin/users`|List registered platform users (sanitized)|Bearer Token|`ADMIN`|
 
----
+\---
 
-## Security & Architecture Details
+## Security \& Architecture Details
 
-### 1. Password Security
-- Passwords are encrypted using Node's native `crypto.scrypt` with a cryptographically secure 16-byte random salt.
-- Password hashes and salts are never returned in API responses or logged.
-- Password policy: Minimum 12 characters, requiring uppercase, lowercase, number, and special character.
+### 1\. Password Security
 
-### 2. One-Time Password (OTP) Security
-- OTPs are cryptographically generated using `crypto.randomInt(100000, 1000000)`.
-- OTP values are stored hashed with `crypto.scrypt`. Plaintext OTPs are never persisted in the database.
-- OTPs expire after 10 minutes and enforce a maximum limit of 5 failed verification attempts.
-- Resend is gated by a 60-second cooldown and automatically invalidates prior unconsumed OTPs.
+* Passwords are encrypted using Node's native `crypto.scrypt` with a cryptographically secure 16-byte random salt.
+* Password hashes and salts are never returned in API responses or logged.
+* Password policy: Minimum 12 characters, requiring uppercase, lowercase, number, and special character.
 
-### 3. JWT & Token Rotation (Phase 6)
-- **Access Tokens**: Short-lived (15 minutes), signed with `JWT_ACCESS_SECRET` (`HS256`), containing minimal claims (`sub`, `role`, `jti`).
-- **Refresh Tokens**: Long-lived (7 days), signed with `JWT_REFRESH_SECRET`, stored only as SHA-256 hashes (`refresh_tokens.token_hash`).
-- **Refresh Token Rotation**: Calling `/api/v1/auth/refresh` revokes the old refresh token and issues a new pair inside a database transaction.
-- **Token Reuse Detection**: If a revoked refresh token is presented, all active sessions for that user are immediately invalidated to prevent replay attacks.
+### 2\. One-Time Password (OTP) Security
 
-### 4. Role-Based Access Control (Phase 7)
-- Roles: `ADMIN` and `CUSTOMER`.
-- Reusable `requireRole(...roles)` middleware:
-  - Validates `req.user` (requires `requireAuth`).
-  - Verifies if `req.user.role` matches one of the allowed roles.
-  - Returns `403 Forbidden` (`FORBIDDEN`) if the user lacks sufficient privileges.
-- Designed to be easily extensible for future roles (e.g., `FLEET_MANAGER`, `STAFF`).
+* OTPs are cryptographically generated using `crypto.randomInt(100000, 1000000)`.
+* OTP values are stored hashed with `crypto.scrypt`. Plaintext OTPs are never persisted in the database.
+* OTPs expire after 10 minutes and enforce a maximum limit of 5 failed verification attempts.
+* Resend is gated by a 60-second cooldown and automatically invalidates prior unconsumed OTPs.
 
----
+### 3\. JWT \& Token Rotation (Phase 6)
+
+* **Access Tokens**: Short-lived (15 minutes), signed with `JWT\_ACCESS\_SECRET` (`HS256`), containing minimal claims (`sub`, `role`, `jti`).
+* **Refresh Tokens**: Long-lived (7 days), signed with `JWT\_REFRESH\_SECRET`, stored only as SHA-256 hashes (`refresh\_tokens.token\_hash`).
+* **Refresh Token Rotation**: Calling `/api/v1/auth/refresh` revokes the old refresh token and issues a new pair inside a database transaction.
+* **Token Reuse Detection**: If a revoked refresh token is presented, all active sessions for that user are immediately invalidated to prevent replay attacks.
+
+### 4\. Role-Based Access Control (Phase 7)
+
+* Roles: `ADMIN` and `CUSTOMER`.
+* Reusable `requireRole(...roles)` middleware:
+
+  * Validates `req.user` (requires `requireAuth`).
+  * Verifies if `req.user.role` matches one of the allowed roles.
+  * Returns `403 Forbidden` (`FORBIDDEN`) if the user lacks sufficient privileges.
+* Designed to be easily extensible for future roles (e.g., `FLEET\_MANAGER`, `STAFF`).
+
+\---
 
 ## Automated Test Suite (Phase 9)
 
@@ -281,6 +289,7 @@ node tests/auth/full-e2e-check.js
 ```
 
 ### Tested Capabilities:
+
 1. User registration with email normalization and input validation.
 2. Duplicate email detection and rejection (`409 Conflict`).
 3. Invalid registration payloads and password strength enforcement (`400 Bad Request`).
@@ -296,15 +305,16 @@ node tests/auth/full-e2e-check.js
 13. Frontend static asset delivery and HTML page rendering.
 14. Memory-backed rate limiters and HTTP security headers (`Helmet`, `CORS`).
 
----
+\---
 
 ## Future Modules (Phase 10 — Reserved)
 
 The following modules will be built after the authentication and authorization foundation is complete:
 
-1. **Vehicles & Categories**
+1. **Vehicles \& Categories**
 2. **Vehicle Availability Engine**
-3. **Bookings & Reservations**
-4. **Payments & Invoicing**
+3. **Bookings \& Reservations**
+4. **Payments \& Invoicing**
 5. **Customer Management**
 6. **Fleet Management**
+

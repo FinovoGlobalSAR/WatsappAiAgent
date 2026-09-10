@@ -27,7 +27,7 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 
 // Serve static frontend assets for testing
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(__dirname, '../../Frontend')));
 
 app.get('/health', (req, res) => {
   res.status(200).json({
@@ -38,11 +38,11 @@ app.get('/health', (req, res) => {
 });
 
 app.get('/forgot-password', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/forgot-password.html'));
+  res.sendFile(path.join(__dirname, '../../Frontend/forgot-password.html'));
 });
 
 app.get('/reset-password', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/reset-password.html'));
+  res.sendFile(path.join(__dirname, '../../Frontend/reset-password.html'));
 });
 
 app.use('/api/v1/auth', authRoutes);
