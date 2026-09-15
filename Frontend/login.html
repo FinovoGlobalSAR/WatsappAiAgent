@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Car Rental Platform</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header>
+    <a href="/index.html" class="brand">
+      Car Rental Platform <span class="brand-badge">API Client</span>
+    </a>
+    <nav>
+      <a href="/register.html">Register</a>
+      <a href="/verify.html">Verify OTP</a>
+      <a href="/login.html" class="active">Login</a>
+      <a href="/dashboard.html">Dashboard</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="card">
+      <h1 class="card-title">Sign In</h1>
+      <p class="card-subtitle">Access your car rental account</p>
+
+      <div id="alertBox" class="alert"></div>
+
+      <form id="loginForm" novalidate>
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" required autocomplete="email">
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <label for="password" style="margin-bottom: 0;">Password</label>
+            <a href="/forgot-password.html" style="color: var(--primary); font-size: 0.8rem; text-decoration: none;">Forgot Password?</a>
+          </div>
+          <input type="password" id="password" name="password" required autocomplete="current-password">
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn btn-primary">Log In</button>
+      </form>
+
+      <div class="card-footer">
+        Don't have an account? <a href="/register.html">Register here</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    Car Rental Platform Backend API &copy; 2026.
+  </footer>
+  <script src="/js/auth.js"></script>
+</body>
+</html>
