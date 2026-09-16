@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-display: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display:
+    "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-script: "Caveat", cursive;
 
   --color-brand-50: #f5f0fb;
@@ -22,7 +23,9 @@
   --color-ink-200: #e3dfea;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
 }
 

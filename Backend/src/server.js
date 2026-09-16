@@ -1,6 +1,6 @@
-require('dotenv').config();
+require("dotenv").config();
 
-const app = require('./app');
+const app = require("./app");
 
 const PORT = Number(process.env.PORT) || 5000;
 
@@ -13,7 +13,7 @@ const shutdown = (signal) => {
 
   server.close((error) => {
     if (error) {
-      console.error('Error during shutdown:', error);
+      console.error("Error during shutdown:", error);
       process.exit(1);
     }
 
@@ -21,5 +21,5 @@ const shutdown = (signal) => {
   });
 };
 
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));

@@ -7,9 +7,14 @@
  * - On unrecoverable 401: clears tokens and redirects to /login
  */
 
-import { getAccessToken, getRefreshToken, setTokens, clearTokens } from './tokenStorage';
+import {
+  getAccessToken,
+  getRefreshToken,
+  setTokens,
+  clearTokens,
+} from "./tokenStorage";
 
-const BASE = (import.meta.env.VITE_API_URL || '') + '/api/v1';
+const BASE = (import.meta.env.VITE_API_URL || "") + "/api/v1";
 
 let isRefreshing = false;
 let refreshQueue = []; // pending requests waiting for the refresh
@@ -27,24 +32,27 @@ function processQueue(error, token = null) {
 
 async function doRefresh() {
   const refreshToken = getRefreshToken();
-  if (!refreshToken) throw new Error('No refresh token');
+  if (!refreshToken) throw new Error("No refresh token");
 
   const res = await fetch(`${BASE}/auth/refresh`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refreshToken }),
   });
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.message || 'Refresh failed');
+    throw new Error(body.message || "Refresh failed");
   }
 
   const body = await res.json();
   const tokens = body.data?.tokens;
-  if (!tokens?.accessToken) throw new Error('Invalid refresh response');
+  if (!tokens?.accessToken) throw new Error("Invalid refresh response");
 
-  setTokens({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
+  setTokens({
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+  });
   return tokens.accessToken;
 }
 
@@ -58,12 +66,12 @@ async function request(path, options = {}, _isRetry = false) {
   const accessToken = getAccessToken();
 
   const headers = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     ...(options.headers || {}),
   };
 
   if (accessToken) {
-    headers['Authorization'] = `Bearer ${accessToken}`;
+    headers["Authorization"] = `Bearer ${accessToken}`;
   }
 
   const res = await fetch(`${BASE}${path}`, {
@@ -80,13 +88,16 @@ async function request(path, options = {}, _isRetry = false) {
   }
 
   // Attempt silent token refresh on expired access token
-  if (res.status === 401 && body.code === 'TOKEN_EXPIRED' && !_isRetry) {
+  if (res.status === 401 && body.code === "TOKEN_EXPIRED" && !_isRetry) {
     if (isRefreshing) {
       // Queue this request until the ongoing refresh completes
       return new Promise((resolve, reject) => {
         refreshQueue.push({ resolve, reject });
       }).then((newToken) => {
-        const retryHeaders = { ...headers, Authorization: `Bearer ${newToken}` };
+        const retryHeaders = {
+          ...headers,
+          Authorization: `Bearer ${newToken}`,
+        };
         return request(path, { ...options, headers: retryHeaders }, true);
       });
     }
@@ -101,7 +112,7 @@ async function request(path, options = {}, _isRetry = false) {
       processQueue(err);
       isRefreshing = false;
       clearTokens();
-      window.location.href = '/login';
+      window.location.href = "/login";
       throw err;
     }
   }
@@ -123,42 +134,57 @@ async function request(path, options = {}, _isRetry = false) {
 
 export const authApi = {
   register: (data) =>
-    request('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
+    request("/auth/register", { method: "POST", body: JSON.stringify(data) }),
 
   verifyEmail: (data) =>
-    request('/auth/verify-email', { method: 'POST', body: JSON.stringify(data) }),
+    request("/auth/verify-email", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 
   resendOtp: (data) =>
-    request('/auth/resend-otp', { method: 'POST', body: JSON.stringify(data) }),
+    request("/auth/resend-otp", { method: "POST", body: JSON.stringify(data) }),
 
   login: (data) =>
-    request('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
+    request("/auth/login", { method: "POST", body: JSON.stringify(data) }),
 
-  me: () =>
-    request('/auth/me', { method: 'GET' }),
+  me: () => request("/auth/me", { method: "GET" }),
 
   refresh: (refreshToken) =>
-    request('/auth/refresh', { method: 'POST', body: JSON.stringify({ refreshToken }) }),
+    request("/auth/refresh", {
+      method: "POST",
+      body: JSON.stringify({ refreshToken }),
+    }),
 
   logout: (refreshToken) =>
-    request('/auth/logout', { method: 'POST', body: JSON.stringify({ refreshToken }) }),
+    request("/auth/logout", {
+      method: "POST",
+      body: JSON.stringify({ refreshToken }),
+    }),
 
   forgotPassword: (data) =>
-    request('/auth/forgot-password', { method: 'POST', body: JSON.stringify(data) }),
+    request("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 
   verifyResetOtp: (data) =>
-    request('/auth/verify-reset-otp', { method: 'POST', body: JSON.stringify(data) }),
+    request("/auth/verify-reset-otp", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 
   resetPassword: (data) =>
-    request('/auth/reset-password', { method: 'POST', body: JSON.stringify(data) }),
+    request("/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 };
 
 // ─── Admin endpoints ───────────────────────────────────────────────────────
 
 export const adminApi = {
-  dashboard: () =>
-    request('/admin/dashboard', { method: 'GET' }),
+  dashboard: () => request("/admin/dashboard", { method: "GET" }),
 
-  users: () =>
-    request('/admin/users', { method: 'GET' }),
+  users: () => request("/admin/users", { method: "GET" }),
 };

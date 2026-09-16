@@ -56,7 +56,6 @@ async function verifyEmailOtp(user, otp, connection) {
 
   const valid = await verifyOtp(otp, record.otp_hash);
   if (!valid) {
-    // Persist the failed attempt even if the surrounding verification transaction rolls back.
     await EmailOTP.incrementAttempts(record.id);
     throw new AppError(400, 'Invalid verification OTP.', 'OTP_INVALID');
   }

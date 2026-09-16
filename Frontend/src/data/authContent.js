@@ -1,20 +1,19 @@
-
 export const brand = {
   name: "Finovo",
   navLinks: ["Cars", "Trips", "Experiences"],
 };
+import loginBanner from "../assets/loginBanner.png";
+import signupBanner from "../assets/signupBanner.png";
 
 export const loginContent = {
-  backgroundImage:
-    "https://images.unsplash.com/photo-1760068670115-6d4e415b0c7a?fm=jpg&q=80&w=1400&auto=format&fit=crop",
+  backgroundImage: loginBanner,
   imageAlt: "Woman looking out of a car window at sunset along the coast",
   headline: [
     { text: "Travel ", highlight: false },
     { text: "beyond the", highlight: true },
   ],
   headlineSecondLine: { text: "ordinary.", highlight: false },
-  description:
-    "From city drives to weekend escapes, Finovo gets you there.",
+  description: "From city drives to weekend escapes, Finovo gets you there.",
   features: [
     {
       icon: "car",
@@ -36,8 +35,7 @@ export const loginContent = {
 };
 
 export const signupContent = {
-  backgroundImage:
-    "https://images.unsplash.com/photo-1732624697647-524a65316cdf?fm=jpg&q=80&w=1400&auto=format&fit=crop",
+  backgroundImage: signupBanner,
   imageAlt: "Car driving down a coastal road at sunset",
   headline: [{ text: "Every ride you need,", highlight: false }],
   headlineSecondLine: { text: "ready to go.", highlight: true },

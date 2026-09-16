@@ -31,7 +31,12 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-900">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M4 12L12 4L20 12L12 20L4 12Z" stroke="#fff" strokeWidth="2" strokeLinejoin="round" />
+                <path
+                  d="M4 12L12 4L20 12L12 20L4 12Z"
+                  stroke="#fff"
+                  strokeWidth="2"
+                  strokeLinejoin="round"
+                />
                 <path d="M8 12L12 8L16 12L12 16L8 12Z" fill="#fff" />
               </svg>
             </span>
@@ -72,7 +77,8 @@ export default function AdminDashboard() {
               Welcome, {user?.firstName}! 🛡️
             </h1>
             <p className="mt-2 text-[15px] text-white/70">
-              Manage users, monitor system health, and keep Finovo running smoothly.
+              Manage users, monitor system health, and keep Finovo running
+              smoothly.
             </p>
           </div>
         </div>
@@ -127,16 +133,21 @@ export default function AdminDashboard() {
 
         {/* Admin details */}
         <div className="mt-8 rounded-2xl border border-ink-200 bg-white p-6 shadow-sm">
-          <h2 className="text-base font-semibold text-ink-900">Your Admin Account</h2>
+          <h2 className="text-base font-semibold text-ink-900">
+            Your Admin Account
+          </h2>
           <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
             {[
               ["Name", `${user?.firstName} ${user?.lastName}`],
               ["Email", user?.email],
               ["Role", user?.role],
               ["Account Status", user?.status],
-              ["Last Check", dashData?.system?.timestamp
-                ? new Date(dashData.system.timestamp).toLocaleString()
-                : "—"],
+              [
+                "Last Check",
+                dashData?.system?.timestamp
+                  ? new Date(dashData.system.timestamp).toLocaleString()
+                  : "—",
+              ],
             ].map(([label, value]) => (
               <div key={label} className="flex flex-col gap-0.5">
                 <span className="text-[11px] font-medium uppercase tracking-widest text-ink-400">

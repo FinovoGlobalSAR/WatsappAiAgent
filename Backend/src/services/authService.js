@@ -173,7 +173,6 @@ async function refreshTokens({ refreshToken }) {
   }
 
   if (storedToken.revoked_at) {
-    // Possible token theft / replay: revoke all sessions for this user
     await RefreshToken.revokeAllByUserId(storedToken.user_id);
     throw new AppError(401, 'Refresh token has been revoked.', 'REFRESH_TOKEN_REVOKED');
   }
@@ -330,7 +329,6 @@ async function resetPassword({ email, resetToken, otp, newPassword }) {
     const newPasswordHash = await hashPassword(newPassword);
     await User.updatePassword(user.id, newPasswordHash, connection);
 
-    // Invalidate all active sessions for this user across all devices
     await RefreshToken.revokeAllByUserId(user.id, connection);
 
     await connection.commit();

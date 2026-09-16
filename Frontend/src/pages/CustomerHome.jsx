@@ -21,7 +21,12 @@ export default function CustomerHome() {
           <div className="flex items-center gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-900">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M4 12L12 4L20 12L12 20L4 12Z" stroke="#fff" strokeWidth="2" strokeLinejoin="round" />
+                <path
+                  d="M4 12L12 4L20 12L12 20L4 12Z"
+                  stroke="#fff"
+                  strokeWidth="2"
+                  strokeLinejoin="round"
+                />
                 <path d="M8 12L12 8L16 12L12 16L8 12Z" fill="#fff" />
               </svg>
             </span>
@@ -63,7 +68,8 @@ export default function CustomerHome() {
               Hello, {user?.firstName}! 👋
             </h1>
             <p className="mt-2 text-[15px] text-white/70">
-              Ready for your next adventure? Explore our fleet and book your perfect ride.
+              Ready for your next adventure? Explore our fleet and book your
+              perfect ride.
             </p>
           </div>
         </div>
@@ -99,12 +105,21 @@ export default function CustomerHome() {
               onClick={card.onClick}
               className="group flex items-center gap-4 rounded-2xl border border-ink-200 bg-white px-6 py-5 text-left shadow-sm transition-shadow hover:shadow-md"
             >
-              <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${card.bg}`}>
-                <card.icon className={`h-5 w-5 ${card.color}`} strokeWidth={2} />
+              <span
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${card.bg}`}
+              >
+                <card.icon
+                  className={`h-5 w-5 ${card.color}`}
+                  strokeWidth={2}
+                />
               </span>
               <div>
-                <p className="text-sm font-semibold text-ink-900">{card.label}</p>
-                <p className="mt-0.5 text-xs text-ink-400 truncate max-w-[160px]">{card.desc}</p>
+                <p className="text-sm font-semibold text-ink-900">
+                  {card.label}
+                </p>
+                <p className="mt-0.5 text-xs text-ink-400 truncate max-w-[160px]">
+                  {card.desc}
+                </p>
               </div>
             </button>
           ))}
@@ -112,7 +127,9 @@ export default function CustomerHome() {
 
         {/* Account details */}
         <div className="mt-8 rounded-2xl border border-ink-200 bg-white p-6 shadow-sm">
-          <h2 className="text-base font-semibold text-ink-900">Account Details</h2>
+          <h2 className="text-base font-semibold text-ink-900">
+            Account Details
+          </h2>
           <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
             {[
               ["Name", `${user?.firstName} ${user?.lastName}`],
@@ -120,7 +137,12 @@ export default function CustomerHome() {
               ["Role", user?.role],
               ["Account Status", user?.status],
               ["Email Verified", user?.emailVerified ? "Yes ✓" : "No"],
-              ["Member Since", user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "—"],
+              [
+                "Member Since",
+                user?.createdAt
+                  ? new Date(user.createdAt).toLocaleDateString()
+                  : "—",
+              ],
             ].map(([label, value]) => (
               <div key={label} className="flex flex-col gap-0.5">
                 <span className="text-[11px] font-medium uppercase tracking-widest text-ink-400">

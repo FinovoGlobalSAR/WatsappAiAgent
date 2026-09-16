@@ -18,7 +18,11 @@ async function register(req, res, next) {
     if (errors.length) throw new AppError(400, 'Request validation failed.', 'VALIDATION_ERROR');
 
     const user = await authService.register(value);
-    res.status(201).json({ success: true, message: 'Registration successful. Check your email for the verification OTP.', data: { user } });
+    res.status(201).json({
+      success: true,
+      message: 'Registration successful. Check your email for the verification OTP.',
+      data: { user }
+    });
   } catch (error) {
     if (error.code === 'VALIDATION_ERROR') error.details = validateRegistration(req.body).errors;
     next(error);

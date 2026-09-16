@@ -51,7 +51,9 @@ export default function ForgotPassword() {
           <button
             type="button"
             onClick={() =>
-              navigate(`/reset-password?email=${encodeURIComponent(email.trim())}`)
+              navigate(
+                `/reset-password?email=${encodeURIComponent(email.trim())}`,
+              )
             }
             className="w-full rounded-xl bg-brand-900 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-brand-800"
           >
