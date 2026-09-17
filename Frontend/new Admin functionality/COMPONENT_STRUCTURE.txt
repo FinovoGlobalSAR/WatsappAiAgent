@@ -1,0 +1,25 @@
+src/
+├── App.jsx
+├── main.jsx
+├── index.css
+├── routes/
+│   └── AppRoutes.jsx
+├── pages/
+│   ├── CarStatusList.jsx
+│   ├── AddCarPage.jsx
+│   ├── EditCarPage.jsx
+│   └── edit/
+│       ├── EditIdentification.jsx
+│       ├── EditSpecifications.jsx
+│       ├── EditPricing.jsx
+│       ├── EditDescription.jsx
+│       ├── EditPhoto.jsx
+│       ├── EditPreview.jsx
+│       └── Catalog.jsx
+├── components/
+│   ├── common/
+│   ├── layout/
+│   └── car-list/
+├── data/
+│   └── carOptions.js
+└── assets/

@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Users, LogOut, Activity, Shield } from "lucide-react";
+import { Users, LogOut, Activity, Shield, CarFront } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useCars } from "../context/CarContext";
 import { adminApi } from "../lib/api";
 import { brand } from "../data/authContent";
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
+  const { stats } = useCars();
   const navigate = useNavigate();
   const [dashData, setDashData] = useState(null);
   const [error, setError] = useState("");
@@ -46,6 +48,13 @@ export default function AdminDashboard() {
             </span>
           </div>
           <div className="flex items-center gap-3">
+            <Link
+              to="/cars"
+              className="flex items-center gap-1.5 rounded-xl border border-ink-200 px-4 py-2 text-sm font-medium text-ink-600 transition-colors hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
+            >
+              <CarFront className="h-4 w-4" strokeWidth={2} />
+              Fleet & Cars
+            </Link>
             <Link
               to="/admin/users"
               className="flex items-center gap-1.5 rounded-xl border border-ink-200 px-4 py-2 text-sm font-medium text-ink-600 transition-colors hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
@@ -90,7 +99,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Stat cards */}
-        <div className="mt-8 grid gap-5 sm:grid-cols-3">
+        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-2xl border border-ink-200 bg-white p-6 shadow-sm">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50">
               <Shield className="h-5 w-5 text-brand-600" strokeWidth={2} />
@@ -127,6 +136,24 @@ export default function AdminDashboard() {
               className="mt-1 block text-sm font-semibold text-brand-600 hover:text-brand-700"
             >
               View all users →
+            </Link>
+          </div>
+
+          <div className="rounded-2xl border border-ink-200 bg-white p-6 shadow-sm">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50">
+              <CarFront className="h-5 w-5 text-amber-600" strokeWidth={2} />
+            </div>
+            <p className="mt-4 text-xs font-medium uppercase tracking-widest text-ink-400">
+              Vehicle Fleet
+            </p>
+            <p className="mt-1 text-2xl font-extrabold text-ink-900">
+              {stats.total} Cars
+            </p>
+            <Link
+              to="/cars"
+              className="mt-1 block text-sm font-semibold text-amber-600 hover:text-amber-700"
+            >
+              Manage fleet →
             </Link>
           </div>
         </div>

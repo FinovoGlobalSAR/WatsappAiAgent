@@ -63,6 +63,13 @@ export default function AdminUsers() {
               Dashboard
             </Link>
             <span className="text-ink-200">|</span>
+            <Link
+              to="/cars"
+              className="text-sm font-medium text-ink-600 hover:text-ink-900"
+            >
+              Fleet & Cars
+            </Link>
+            <span className="text-ink-200">|</span>
             <div className="flex items-center gap-2">
               <span className="text-lg font-bold text-ink-900">{brand.name}</span>
               <span className="rounded-md bg-brand-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-brand-700">

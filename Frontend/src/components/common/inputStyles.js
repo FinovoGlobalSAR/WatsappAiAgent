@@ -1,0 +1,1 @@
+export const inputCls = 'h-[35px] w-full rounded-[9px] border border-[#dcdbe1] bg-[#f1f1f2] px-[11px] text-[10px] text-[#7f7898] outline-none focus:border-[#987099] focus:ring-2 focus:ring-[#4a064e]/10';
