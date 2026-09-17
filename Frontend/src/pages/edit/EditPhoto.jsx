@@ -11,8 +11,8 @@ export default function EditPhoto({ photo, onChangePhoto, onRemovePhoto }) {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 10 * 1024 * 1024) {
-      setError('Photo must be 10MB or smaller.');
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Photo must be 5MB or smaller.');
       return;
     }
     if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
@@ -23,7 +23,7 @@ export default function EditPhoto({ photo, onChangePhoto, onRemovePhoto }) {
     const reader = new FileReader();
     reader.onload = (e) => {
       setError(null);
-      onChangePhoto?.(e.target.result);
+      onChangePhoto?.(e.target.result, file);
     };
     reader.readAsDataURL(file);
   };

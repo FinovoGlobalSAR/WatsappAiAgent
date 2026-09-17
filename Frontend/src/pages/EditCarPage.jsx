@@ -1,35 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import { Check, ChevronLeft, AlertCircle } from 'lucide-react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
-import Shell from '../components/layout/Shell';
-import EditIdentification from './edit/EditIdentification';
-import EditSpecifications from './edit/EditSpecifications';
-import EditPricing from './edit/EditPricing';
-import EditDescription from './edit/EditDescription';
-import EditPhoto from './edit/EditPhoto';
-import EditPreview from './edit/EditPreview';
-import Catalog from './edit/Catalog';
-import { useCars } from '../context/CarContext';
+import React, { useState, useEffect } from "react";
+import { Check, ChevronLeft, AlertCircle } from "lucide-react";
+import { useNavigate, useParams, Link } from "react-router-dom";
+import Shell from "../components/layout/Shell";
+import EditIdentification from "./edit/EditIdentification";
+import EditSpecifications from "./edit/EditSpecifications";
+import EditPricing from "./edit/EditPricing";
+import EditDescription from "./edit/EditDescription";
+import EditPhoto from "./edit/EditPhoto";
+import EditPreview from "./edit/EditPreview";
+import Catalog from "./edit/Catalog";
+import { useCars } from "../context/CarContext";
 
 export default function EditCarPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getCarById, updateCar, cars } = useCars();
+  const { getCarById, updateCar, cars, loading } = useCars();
 
   const [car, setCar] = useState(() => {
     if (id) return getCarById(id);
     return cars.length > 0 ? cars[0] : null;
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [photoFile, setPhotoFile] = useState(null);
   const [errors, setErrors] = useState({});
 
   // Sync form if target car changes
   useEffect(() => {
-    const targetCar = id ? getCarById(id) : (cars.length > 0 ? cars[0] : null);
+    const targetCar = id ? getCarById(id) : cars.length > 0 ? cars[0] : null;
     if (targetCar && targetCar.id !== car?.id) {
       setCar({ ...targetCar });
     }
   }, [id, getCarById, cars, car?.id]);
+
+  useEffect(() => {
+    setPhotoFile(null);
+  }, [id]);
 
   const update = (k, v) => {
     setCar((prev) => (prev ? { ...prev, [k]: v } : prev));
@@ -40,18 +45,29 @@ export default function EditCarPage() {
 
   const validate = () => {
     const errs = {};
-    if (!car.brand?.trim()) errs.brand = 'Brand is required';
-    if (!car.category?.trim()) errs.category = 'Category is required';
-    if (!car.model?.trim()) errs.model = 'Model is required';
-    if (!String(car.year || '').trim()) errs.year = 'Year is required';
-    if (!car.registration?.trim()) errs.registration = 'Registration number is required';
+    if (!car.brand?.trim()) errs.brand = "Brand is required";
+    if (!car.category?.trim()) errs.category = "Category is required";
+    if (!car.model?.trim()) errs.model = "Model is required";
+    if (!String(car.year || "").trim()) errs.year = "Year is required";
+    if (!car.registration?.trim())
+      errs.registration = "Registration number is required";
     if (!car.daily || isNaN(Number(car.daily)) || Number(car.daily) <= 0) {
-      errs.daily = 'Daily rate must be a valid positive amount';
+      errs.daily = "Daily rate must be a valid positive amount";
+    }
+    if (!car.weekly || isNaN(Number(car.weekly)) || Number(car.weekly) <= 0) {
+      errs.weekly = "Weekly rate must be a valid positive amount";
+    }
+    if (
+      !car.monthly ||
+      isNaN(Number(car.monthly)) ||
+      Number(car.monthly) <= 0
+    ) {
+      errs.monthly = "Monthly rate must be a valid positive amount";
     }
     return errs;
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     if (!car) return;
 
@@ -62,18 +78,42 @@ export default function EditCarPage() {
     }
 
     setIsSaving(true);
-    setTimeout(() => {
-      updateCar(car.id, car);
-      setIsSaving(false);
-      navigate('/cars', {
-        state: { toast: `Vehicle ${car.brand} ${car.model} updated successfully!` }
+
+    try {
+      await updateCar(car.id, car, photoFile);
+      navigate("/cars", {
+        state: {
+          toast: `Vehicle ${car.brand} ${car.model} updated successfully!`,
+        },
       });
-    }, 300);
+    } catch (error) {
+      setErrors({ api: error.message || "Could not update the car." });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
-    navigate('/cars');
+    navigate("/cars");
   };
+
+  if (loading && !car) {
+    return (
+      <Shell kind="edit">
+        <main className="min-h-[60vh] flex items-center justify-center p-8 bg-[#f4f6fb]">
+          <div className="text-center rounded-xl bg-white p-8 border border-gray-200 shadow-sm max-w-md">
+            <span className="mx-auto mb-3 block h-8 w-8 animate-spin rounded-full border-2 border-[#3f003d] border-t-transparent" />
+            <h2 className="text-lg font-bold text-gray-800">
+              Loading vehicle...
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Getting the car from the backend.
+            </p>
+          </div>
+        </main>
+      </Shell>
+    );
+  }
 
   if (!car) {
     return (
@@ -81,7 +121,9 @@ export default function EditCarPage() {
         <main className="min-h-[60vh] flex items-center justify-center p-8 bg-[#f4f6fb]">
           <div className="text-center rounded-xl bg-white p-8 border border-gray-200 shadow-sm max-w-md">
             <AlertCircle size={40} className="mx-auto text-amber-500 mb-3" />
-            <h2 className="text-lg font-bold text-gray-800">Vehicle Not Found</h2>
+            <h2 className="text-lg font-bold text-gray-800">
+              Vehicle Not Found
+            </h2>
             <p className="mt-1 text-sm text-gray-500">
               The requested vehicle could not be loaded or does not exist.
             </p>
@@ -106,7 +148,10 @@ export default function EditCarPage() {
           <div className="flex items-start justify-between px-3 pb-[14px]">
             <div>
               <div className="mb-[7px] flex items-center gap-[9px] text-[11px] text-[#7e7b99]">
-                <Link to="/cars" className="hover:text-[#463653] transition-colors">
+                <Link
+                  to="/cars"
+                  className="hover:text-[#463653] transition-colors"
+                >
                   Cars
                 </Link>
                 <b className="text-[15px] text-[#aaa7b6]">›</b>
@@ -116,7 +161,8 @@ export default function EditCarPage() {
                 Edit {car.brand} {car.model}
               </h1>
               <p className="mt-[5px] text-[12px] text-[#807c9a]">
-                Update the vehicle details below. Make any changes and save when you're done.
+                Update the vehicle details below. Make any changes and save when
+                you're done.
               </p>
             </div>
 
@@ -155,7 +201,8 @@ export default function EditCarPage() {
             <div className="mb-4 mx-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-[13px] text-red-600">
               <AlertCircle size={17} className="shrink-0" />
               <span>
-                Please check the required fields: {Object.values(errors).join(', ')}.
+                {errors.api ||
+                  `Please check the required fields: ${Object.values(errors).filter(Boolean).join(", ")}.`}
               </span>
             </div>
           )}
@@ -174,8 +221,14 @@ export default function EditCarPage() {
             <div className="min-w-0">
               <EditPhoto
                 photo={car.photo}
-                onChangePhoto={(newPhoto) => update('photo', newPhoto)}
-                onRemovePhoto={() => update('photo', null)}
+                onChangePhoto={(newPhoto, file) => {
+                  update("photo", newPhoto);
+                  setPhotoFile(file || null);
+                }}
+                onRemovePhoto={() => {
+                  update("photo", null);
+                  setPhotoFile(null);
+                }}
               />
               <EditPreview car={car} />
               <Catalog car={car} update={update} />

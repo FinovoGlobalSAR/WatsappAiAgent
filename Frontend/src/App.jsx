@@ -59,93 +59,22 @@ export default function App() {
               }
             />
 
-            {/* Admin-only: Car Fleet Management */}
-            <Route
-              path="/cars"
-              element={
-                <ProtectedRoute role="ADMIN">
-                  <CarStatusList />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/car-status-list"
-              element={
-                <ProtectedRoute role="ADMIN">
-                  <CarStatusList />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/cars"
-              element={
-                <ProtectedRoute role="ADMIN">
-                  <CarStatusList />
-                </ProtectedRoute>
-              }
-            />
+            {/* Car Fleet Management - backend testing routes (no frontend auth guard) */}
+            <Route path="/cars" element={<CarStatusList />} />
+            <Route path="/car-status-list" element={<CarStatusList />} />
+            <Route path="/admin/cars" element={<CarStatusList />} />
 
-            {/* Admin-only: Add Car */}
-            <Route
-              path="/cars/add"
-              element={
-                <ProtectedRoute role="ADMIN">
-                  <AddCarPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/add-car"
-              element={
-                <ProtectedRoute role="ADMIN">
-                  <AddCarPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/cars/add"
-              element={
-                <ProtectedRoute role="ADMIN">
-                  <AddCarPage />
-                </ProtectedRoute>
-              }
-            />
+            {/* Add Car - backend testing route (no frontend auth guard) */}
+            <Route path="/cars/add" element={<AddCarPage />} />
+            <Route path="/add-car" element={<AddCarPage />} />
+            <Route path="/admin/cars/add" element={<AddCarPage />} />
 
-            {/* Admin-only: Edit Car */}
-            <Route
-              path="/cars/edit/:id"
-              element={
-                <ProtectedRoute role="ADMIN">
-                  <EditCarPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/cars/edit"
-              element={
-                <ProtectedRoute role="ADMIN">
-                  <EditCarPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/edit-car"
-              element={
-                <ProtectedRoute role="ADMIN">
-                  <EditCarPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/cars/edit/:id"
-              element={
-                <ProtectedRoute role="ADMIN">
-                  <EditCarPage />
-                </ProtectedRoute>
-              }
-            />
+            {/* Edit Car - backend testing route (no frontend auth guard) */}
+            <Route path="/cars/edit/:id" element={<EditCarPage />} />
+            <Route path="/cars/edit" element={<EditCarPage />} />
+            <Route path="/edit-car" element={<EditCarPage />} />
+            <Route path="/admin/cars/edit/:id" element={<EditCarPage />} />
 
-            {/* Catch-all */}
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </BrowserRouter>

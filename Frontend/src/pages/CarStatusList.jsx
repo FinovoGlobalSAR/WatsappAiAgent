@@ -1,22 +1,30 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { Plus, Check, AlertCircle } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import Shell from '../components/layout/Shell';
-import CarStats from '../components/car-list/CarStats';
-import CarFilters from '../components/car-list/CarFilters';
-import CarTable from '../components/car-list/CarTable';
-import Pagination from '../components/car-list/Pagination';
-import DeleteConfirmModal from '../components/car-list/DeleteConfirmModal';
-import { useCars } from '../context/CarContext';
+import React, { useMemo, useState, useEffect } from "react";
+import { Plus, Check, AlertCircle } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import Shell from "../components/layout/Shell";
+import CarStats from "../components/car-list/CarStats";
+import CarFilters from "../components/car-list/CarFilters";
+import CarTable from "../components/car-list/CarTable";
+import Pagination from "../components/car-list/Pagination";
+import DeleteConfirmModal from "../components/car-list/DeleteConfirmModal";
+import { useCars } from "../context/CarContext";
 
 export default function CarStatusList() {
   const nav = useNavigate();
   const location = useLocation();
-  const { cars, navbarSearch, updateCarStatus, deleteCar } = useCars();
+  const {
+    cars,
+    navbarSearch,
+    updateCarStatus,
+    deleteCar,
+    loading,
+    error,
+    refreshCars,
+  } = useCars();
 
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('All categories');
-  const [status, setStatus] = useState('All statuses');
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("All categories");
+  const [status, setStatus] = useState("All statuses");
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,14 +40,14 @@ export default function CarStatusList() {
   // Check for toast message passed from navigation state (e.g. after Add or Edit)
   useEffect(() => {
     if (location.state?.toast) {
-      setToast({ type: 'success', text: location.state.toast });
+      setToast({ type: "success", text: location.state.toast });
       window.history.replaceState({}, document.title);
       const timer = setTimeout(() => setToast(null), 3000);
       return () => clearTimeout(timer);
     }
   }, [location.state]);
 
-  const showToast = (text, type = 'success') => {
+  const showToast = (text, type = "success") => {
     setToast({ text, type });
     setTimeout(() => setToast(null), 3000);
   };
@@ -54,10 +62,11 @@ export default function CarStatusList() {
       const matchesQuery =
         !q ||
         [c.brand, c.model, c.registration].some((v) =>
-          v ? v.toLowerCase().includes(q) : false
+          v ? v.toLowerCase().includes(q) : false,
         );
-      const matchesCat = category === 'All categories' || c.category === category;
-      const matchesStatus = status === 'All statuses' || c.status === status;
+      const matchesCat =
+        category === "All categories" || c.category === category;
+      const matchesStatus = status === "All statuses" || c.status === status;
 
       return matchesQuery && matchesCat && matchesStatus;
     });
@@ -80,18 +89,27 @@ export default function CarStatusList() {
   const handleConfirmDelete = async () => {
     if (!carToDelete) return;
     setIsDeleting(true);
-    // Simulate brief operation for realistic loading state
-    setTimeout(() => {
-      deleteCar(carToDelete.id);
-      setIsDeleting(false);
-      showToast(`Vehicle ${carToDelete.brand} ${carToDelete.model} deleted successfully.`);
+
+    try {
+      await deleteCar(carToDelete.id);
+      showToast(
+        `Vehicle ${carToDelete.brand} ${carToDelete.model} deleted successfully.`,
+      );
       setCarToDelete(null);
-    }, 300);
+    } catch (err) {
+      showToast(err.message || "Could not delete the vehicle.", "error");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
-  const handleStatusChange = (carId, newStatus) => {
-    updateCarStatus(carId, newStatus);
-    showToast(`Vehicle status updated to ${newStatus}.`);
+  const handleStatusChange = async (carId, newStatus) => {
+    try {
+      await updateCarStatus(carId, newStatus);
+      showToast(`Vehicle status updated to ${newStatus}.`);
+    } catch (err) {
+      showToast(err.message || "Could not update vehicle status.", "error");
+    }
   };
 
   return (
@@ -103,18 +121,38 @@ export default function CarStatusList() {
               Cars
             </h1>
             <p className="m-0 text-[13px] text-[#7b8494]">
-              Manage your vehicle fleet. Add new cars, edit details, or update availability
+              Manage your vehicle fleet. Add new cars, edit details, or update
+              availability
             </p>
           </div>
 
           <button
-            onClick={() => nav('/cars/add')}
+            onClick={() => nav("/cars/add")}
             className="inline-flex h-[38px] items-center gap-[7px] rounded-[7px] bg-[#ffbd22] px-[15px] text-[13px] font-semibold text-[#1e1a18] shadow-sm transition-transform hover:scale-[1.02] hover:bg-[#f5b41b]"
           >
             <Plus size={17} />
             <span>Add Car</span>
           </button>
         </div>
+
+        {error && (
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-[13px] text-red-700">
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={refreshCars}
+              className="rounded-md bg-white px-3 py-1.5 font-semibold text-red-700 border border-red-200 hover:bg-red-100"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {loading && (
+          <div className="mb-4 rounded-lg border border-[#e8ebf0] bg-white p-4 text-[13px] text-[#667085]">
+            Loading cars from backend...
+          </div>
+        )}
 
         {/* Dynamic Statistics */}
         <CarStats />
@@ -158,10 +196,14 @@ export default function CarStatusList() {
         {toast && (
           <div
             className={`fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-lg px-4 py-3 text-[13px] text-white shadow-xl animate-in slide-in-from-bottom-3 duration-200 ${
-              toast.type === 'error' ? 'bg-red-600' : 'bg-[#3f003d]'
+              toast.type === "error" ? "bg-red-600" : "bg-[#3f003d]"
             }`}
           >
-            {toast.type === 'error' ? <AlertCircle size={17} /> : <Check size={17} />}
+            {toast.type === "error" ? (
+              <AlertCircle size={17} />
+            ) : (
+              <Check size={17} />
+            )}
             <span>{toast.text}</span>
           </div>
         )}

@@ -1,14 +1,13 @@
 const express = require("express");
 const controller = require("../controllers/car.controller");
 const upload = require("../middlewares/uploads.middleware");
-const { requireAuth } = require("../middleware/authMiddleware");
 const {
   requireRole,
   ROLES,
 } = require("../middleware/roleMiddleware");
 const router = express.Router();
-router.get("/", requireAuth, controller.getAllCars);
-router.get("/:id", requireAuth, controller.getCarById);
+router.get("/", controller.getAllCars);
+router.get("/:id", controller.getCarById);
 router.post(
   "/",
   upload.single("image"),

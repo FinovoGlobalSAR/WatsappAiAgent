@@ -4,7 +4,7 @@ const { requireAuth } = require("../middleware/authMiddleware");
 const { requireRole, ROLES } = require("../middleware/roleMiddleware");
 const router = express.Router();
 router.get("/", controller.getAllBrands);
-router.get("/:id", requireAuth, controller.getBrandById);
+router.get("/:id", controller.getBrandById);
 router.post("/", controller.createBrand);
 router.put("/:id", controller.updateBrand);
 router.delete("/:id", controller.deleteBrand);

@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef } from 'react';
+import React, { useMemo, useState, useRef } from "react";
 import {
   CarFront,
   Check,
@@ -13,20 +13,20 @@ import {
   Upload,
   Users,
   Car,
-  AlertCircle
-} from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom';
-import SharedSidebar from '../components/layout/SharedSidebar';
-import Topbar from '../components/layout/Topbar';
-import SectionCard from '../components/common/SectionCard';
-import Field from '../components/common/Field';
-import Counter from '../components/common/Counter';
-import Segment from '../components/common/Segment';
-import SelectField from '../components/common/SelectField';
-import TextField from '../components/common/TextField';
-import { inputCls } from '../components/common/inputStyles';
-import { BRANDS, CATEGORIES, COLORS, YEARS } from '../data/carOptions';
-import { useCars } from '../context/CarContext';
+  AlertCircle,
+} from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import SharedSidebar from "../components/layout/SharedSidebar";
+import Topbar from "../components/layout/Topbar";
+import SectionCard from "../components/common/SectionCard";
+import Field from "../components/common/Field";
+import Counter from "../components/common/Counter";
+import Segment from "../components/common/Segment";
+import SelectField from "../components/common/SelectField";
+import TextField from "../components/common/TextField";
+import { inputCls } from "../components/common/inputStyles";
+import { BRANDS, CATEGORIES, COLORS, YEARS } from "../data/carOptions";
+import { useCars } from "../context/CarContext";
 
 export default function AddCarPage() {
   const navigate = useNavigate();
@@ -38,27 +38,28 @@ export default function AddCarPage() {
   const [errors, setErrors] = useState({});
 
   const [form, setForm] = useState({
-    brand: '',
-    model: '',
-    registration: '',
-    category: '',
-    year: '2026',
-    transmission: 'Automatic',
+    brand: "",
+    model: "",
+    registration: "",
+    category: "",
+    year: "2026",
+    transmission: "Automatic",
     seats: 5,
     doors: 4,
-    color: '',
-    mileage: '',
-    fuel: 'Petrol',
-    periods: ['Daily', 'Weekly', 'Monthly'],
-    daily: '45',
-    weekly: '280',
-    monthly: '980',
-    status: 'Available',
+    color: "",
+    mileage: "",
+    fuel: "Petrol",
+    periods: ["Daily", "Weekly", "Monthly"],
+    daily: "45",
+    weekly: "280",
+    monthly: "980",
+    status: "Available",
     public: true,
-    notes: ''
+    notes: "",
   });
 
   const [photo, setPhoto] = useState(null);
+  const [photoFile, setPhotoFile] = useState(null);
 
   const set = (k, v) => {
     setForm((f) => ({ ...f, [k]: v }));
@@ -72,21 +73,30 @@ export default function AddCarPage() {
       ...f,
       periods: f.periods.includes(p)
         ? f.periods.filter((x) => x !== p)
-        : [...f.periods, p]
+        : [...f.periods, p],
     }));
 
-  const count = (k, d) => setForm((f) => ({ ...f, [k]: Math.max(1, (Number(f[k]) || 1) + d) }));
+  const count = (k, d) =>
+    setForm((f) => ({ ...f, [k]: Math.max(1, (Number(f[k]) || 1) + d) }));
 
   const onFile = (file) => {
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      setErrors((prev) => ({ ...prev, photo: 'Photo must be 10MB or smaller.' }));
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors((prev) => ({
+        ...prev,
+        photo: "Photo must be 5MB or smaller.",
+      }));
       return;
     }
-    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
-      setErrors((prev) => ({ ...prev, photo: 'Please choose a PNG, JPG or WEBP image.' }));
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+      setErrors((prev) => ({
+        ...prev,
+        photo: "Please choose a PNG, JPG or WEBP image.",
+      }));
       return;
     }
+
+    setPhotoFile(file);
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -99,49 +109,80 @@ export default function AddCarPage() {
   const handleRemovePhoto = (e) => {
     e?.stopPropagation();
     setPhoto(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+    setPhotoFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const validate = () => {
     const errs = {};
-    if (!form.brand.trim()) errs.brand = 'Brand is required';
-    if (!form.category.trim()) errs.category = 'Category is required';
-    if (!form.model.trim()) errs.model = 'Model is required';
-    if (!form.year.trim()) errs.year = 'Year is required';
-    if (!form.registration.trim()) errs.registration = 'Registration number is required';
+    if (!form.brand.trim()) errs.brand = "Brand is required";
+    if (!form.category.trim()) errs.category = "Category is required";
+    if (!form.model.trim()) errs.model = "Model is required";
+    if (!form.year.trim()) errs.year = "Year is required";
+    if (!form.registration.trim())
+      errs.registration = "Registration number is required";
     if (!form.daily || isNaN(Number(form.daily)) || Number(form.daily) <= 0) {
-      errs.daily = 'Daily rate must be a valid positive amount';
+      errs.daily = "Daily rate must be a valid positive amount";
+    }
+    if (
+      !form.weekly ||
+      isNaN(Number(form.weekly)) ||
+      Number(form.weekly) <= 0
+    ) {
+      errs.weekly = "Weekly rate must be a valid positive amount";
+    }
+    if (
+      !form.monthly ||
+      isNaN(Number(form.monthly)) ||
+      Number(form.monthly) <= 0
+    ) {
+      errs.monthly = "Monthly rate must be a valid positive amount";
+    }
+    if (!photoFile) {
+      errs.photo = "Car image is required";
     }
     return errs;
   };
 
-  const save = (e) => {
+  const save = async (e) => {
     e.preventDefault();
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
     setIsSaving(true);
-    setTimeout(() => {
-      addCar({
+
+    try {
+      await addCar({
         ...form,
-        photo
+        photo,
+        photoFile,
       });
+
+      navigate("/cars", {
+        state: {
+          toast: `Vehicle ${form.brand} ${form.model} added successfully!`,
+        },
+      });
+    } catch (error) {
+      setErrors({ api: error.message || "Could not save the car." });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } finally {
       setIsSaving(false);
-      navigate('/cars', { state: { toast: `Vehicle ${form.brand} ${form.model} added successfully!` } });
-    }, 300);
+    }
   };
 
   const handleCancel = () => {
-    navigate('/cars');
+    navigate("/cars");
   };
 
   const title = useMemo(
-    () => [form.brand, form.model].filter(Boolean).join(' ') || 'Vehicle Preview',
-    [form.brand, form.model]
+    () =>
+      [form.brand, form.model].filter(Boolean).join(" ") || "Vehicle Preview",
+    [form.brand, form.model],
   );
 
   return (
@@ -156,7 +197,10 @@ export default function AddCarPage() {
           <div className="mb-[20px] flex items-start justify-between gap-4">
             <div>
               <div className="mb-2.5 flex items-center gap-2 text-[11px] text-[#827d9c]">
-                <Link to="/cars" className="hover:text-[#41394d] transition-colors">
+                <Link
+                  to="/cars"
+                  className="hover:text-[#41394d] transition-colors"
+                >
                   Cars
                 </Link>
                 <ChevronDown size={13} className="-rotate-90" />
@@ -166,7 +210,8 @@ export default function AddCarPage() {
                 Add a Car
               </h1>
               <p className="m-0 text-[12px] text-[#8d87a3]">
-                Add a new vehicle to your fleet. Fill in the details below to get started.
+                Add a new vehicle to your fleet. Fill in the details below to
+                get started.
               </p>
             </div>
 
@@ -205,7 +250,10 @@ export default function AddCarPage() {
           {Object.keys(errors).length > 0 && (
             <div className="mb-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-[13px] text-red-600">
               <AlertCircle size={17} className="shrink-0" />
-              <span>Please correct the highlighted fields before saving.</span>
+              <span>
+                {errors.api ||
+                  "Please correct the highlighted fields before saving."}
+              </span>
             </div>
           )}
 
@@ -229,9 +277,13 @@ export default function AddCarPage() {
                       value={form.brand}
                       placeholder="Select brand"
                       options={BRANDS}
-                      onChange={(v) => set('brand', v)}
+                      onChange={(v) => set("brand", v)}
                     />
-                    {errors.brand && <p className="mt-1 text-[10px] text-red-500">{errors.brand}</p>}
+                    {errors.brand && (
+                      <p className="mt-1 text-[10px] text-red-500">
+                        {errors.brand}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -240,9 +292,13 @@ export default function AddCarPage() {
                       value={form.category}
                       placeholder="Select category"
                       options={CATEGORIES}
-                      onChange={(v) => set('category', v)}
+                      onChange={(v) => set("category", v)}
                     />
-                    {errors.category && <p className="mt-1 text-[10px] text-red-500">{errors.category}</p>}
+                    {errors.category && (
+                      <p className="mt-1 text-[10px] text-red-500">
+                        {errors.category}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -251,9 +307,13 @@ export default function AddCarPage() {
                       value={form.model}
                       placeholder="e.g. Corolla"
                       max="100"
-                      onChange={(v) => set('model', v)}
+                      onChange={(v) => set("model", v)}
                     />
-                    {errors.model && <p className="mt-1 text-[10px] text-red-500">{errors.model}</p>}
+                    {errors.model && (
+                      <p className="mt-1 text-[10px] text-red-500">
+                        {errors.model}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -261,9 +321,13 @@ export default function AddCarPage() {
                       label="Year"
                       value={form.year}
                       options={YEARS}
-                      onChange={(v) => set('year', v)}
+                      onChange={(v) => set("year", v)}
                     />
-                    {errors.year && <p className="mt-1 text-[10px] text-red-500">{errors.year}</p>}
+                    {errors.year && (
+                      <p className="mt-1 text-[10px] text-red-500">
+                        {errors.year}
+                      </p>
+                    )}
                   </div>
 
                   <div className="col-span-2">
@@ -272,10 +336,12 @@ export default function AddCarPage() {
                       value={form.registration}
                       placeholder="e.g. ABC-1234"
                       max="50"
-                      onChange={(v) => set('registration', v)}
+                      onChange={(v) => set("registration", v)}
                     />
                     {errors.registration && (
-                      <p className="mt-1 text-[10px] text-red-500">{errors.registration}</p>
+                      <p className="mt-1 text-[10px] text-red-500">
+                        {errors.registration}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -290,23 +356,23 @@ export default function AddCarPage() {
                 <div className="grid grid-cols-2 gap-x-[17px] gap-y-[12px]">
                   <Field label="Transmission">
                     <Segment
-                      items={['Automatic', 'Manual']}
+                      items={["Automatic", "Manual"]}
                       value={form.transmission}
-                      onChange={(v) => set('transmission', v)}
+                      onChange={(v) => set("transmission", v)}
                     />
                   </Field>
 
                   <Field label="Fuel type">
                     <div className="flex h-[35px] gap-[6px]">
-                      {['Petrol', 'Diesel', 'Hybrid', 'Electric'].map((v) => (
+                      {["Petrol", "Diesel", "Hybrid", "Electric"].map((v) => (
                         <button
                           type="button"
                           key={v}
-                          onClick={() => set('fuel', v)}
+                          onClick={() => set("fuel", v)}
                           className={`rounded-[17px] border px-[10px] text-[10px] transition-colors ${
                             form.fuel === v
-                              ? 'border-[1.5px] border-[#5b0a58] bg-[#f8f2f9] text-[#4d0750] font-semibold'
-                              : 'border-[#dfdde4] bg-[#f0f0f1] text-[#7b748e] hover:bg-gray-200'
+                              ? "border-[1.5px] border-[#5b0a58] bg-[#f8f2f9] text-[#4d0750] font-semibold"
+                              : "border-[#dfdde4] bg-[#f0f0f1] text-[#7b748e] hover:bg-gray-200"
                           }`}
                         >
                           {v}
@@ -315,20 +381,32 @@ export default function AddCarPage() {
                     </div>
                   </Field>
 
-                  <Counter label="Seats" value={form.seats} onChange={(d) => count('seats', d)} />
-                  <Counter label="Doors" value={form.doors} onChange={(d) => count('doors', d)} />
+                  <Counter
+                    label="Seats"
+                    value={form.seats}
+                    onChange={(d) => count("seats", d)}
+                  />
+                  <Counter
+                    label="Doors"
+                    value={form.doors}
+                    onChange={(d) => count("doors", d)}
+                  />
 
                   <Field label="Color" required={false}>
                     <div className="flex gap-2">
                       <span
                         className="h-[35px] w-[34px] rounded-[7px] border border-[#dddbe2]"
-                        style={{ backgroundColor: form.color ? form.color.toLowerCase() : '#fff' }}
+                        style={{
+                          backgroundColor: form.color
+                            ? form.color.toLowerCase()
+                            : "#fff",
+                        }}
                       />
                       <div className="relative flex-1">
                         <select
                           className={`${inputCls} appearance-none pr-8`}
                           value={form.color}
-                          onChange={(e) => set('color', e.target.value)}
+                          onChange={(e) => set("color", e.target.value)}
                         >
                           <option value="">Select color</option>
                           {COLORS.map((c) => (
@@ -348,7 +426,7 @@ export default function AddCarPage() {
                     value={form.mileage}
                     max="50"
                     placeholder="e.g. 15000"
-                    onChange={(v) => set('mileage', v)}
+                    onChange={(v) => set("mileage", v)}
                   />
                 </div>
               </SectionCard>
@@ -359,20 +437,22 @@ export default function AddCarPage() {
                 title="Pricing & availability"
                 subtitle="Set the rental rate and availability status."
               >
-                <div className="text-[11px] font-semibold text-[#343043]">Available For</div>
+                <div className="text-[11px] font-semibold text-[#343043]">
+                  Available For
+                </div>
                 <p className="-mt-px mb-3 text-[10px] text-[#8c869c]">
                   Select the rental periods this vehicle can be booked for
                 </p>
                 <div className="mb-3 flex gap-3">
-                  {['Daily', 'Weekly', 'Monthly'].map((p) => (
+                  {["Daily", "Weekly", "Monthly"].map((p) => (
                     <button
                       type="button"
                       key={p}
                       onClick={() => togglePeriod(p)}
                       className={`flex h-9 items-center gap-[5px] rounded-[8px] px-[14px] text-[11px] transition-opacity ${
                         form.periods.includes(p)
-                          ? 'bg-[#3f003d] text-white shadow-xs'
-                          : 'bg-[#e5e5e8] text-[#555] opacity-70'
+                          ? "bg-[#3f003d] text-white shadow-xs"
+                          : "bg-[#e5e5e8] text-[#555] opacity-70"
                       }`}
                     >
                       {form.periods.includes(p) && <Check size={15} />}
@@ -383,9 +463,9 @@ export default function AddCarPage() {
 
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    ['Daily Rate ($)', 'daily', '/ day'],
-                    ['Weekly Rate', 'weekly', '/ Week'],
-                    ['Monthly Rate', 'monthly', '/ Month']
+                    ["Daily Rate ($)", "daily", "/ day"],
+                    ["Weekly Rate", "weekly", "/ Week"],
+                    ["Monthly Rate", "monthly", "/ Month"],
                   ].map(([label, key, suffix]) => (
                     <Field key={key} label={label}>
                       <div className="flex h-[35px] items-center gap-2 rounded-[9px] border border-[#dcdbe1] bg-[#f1f1f2] px-[10px] focus-within:border-[#3f003d]">
@@ -400,46 +480,54 @@ export default function AddCarPage() {
                           {suffix}
                         </b>
                       </div>
-                      {key === 'daily' && errors.daily && (
-                        <p className="mt-1 text-[9px] text-red-500">{errors.daily}</p>
+                      {key === "daily" && errors.daily && (
+                        <p className="mt-1 text-[9px] text-red-500">
+                          {errors.daily}
+                        </p>
                       )}
                     </Field>
                   ))}
                 </div>
 
-                <div className="mb-[6px] mt-[14px] text-[11px] font-semibold text-[#343043]">Status</div>
+                <div className="mb-[6px] mt-[14px] text-[11px] font-semibold text-[#343043]">
+                  Status
+                </div>
                 <div className="grid grid-cols-3 gap-[11px]">
                   {[
-                    ['Available', 'Ready for rent', 'green'],
-                    ['Rented', 'Currently rented', 'blue'],
-                    ['Maintenance', 'Under service', 'gold']
+                    ["Available", "Ready for rent", "green"],
+                    ["Rented", "Currently rented", "blue"],
+                    ["Maintenance", "Under service", "gold"],
                   ].map(([name, desc, colorType]) => (
                     <button
                       type="button"
                       key={name}
-                      onClick={() => set('status', name)}
+                      onClick={() => set("status", name)}
                       className={`flex h-[53px] items-start gap-[8px] rounded-[9px] border px-[10px] py-2 text-left transition-all ${
                         form.status === name
-                          ? colorType === 'green'
-                            ? 'border-[1.5px] border-[#377f64] bg-[#edf8f2]'
-                            : colorType === 'blue'
-                            ? 'border-[1.5px] border-[#2864cf] bg-[#eef4ff]'
-                            : 'border-[1.5px] border-[#c7880a] bg-[#fff6e5]'
-                          : 'border-[#dfdde4] bg-[#f0f0f1] hover:bg-gray-100'
+                          ? colorType === "green"
+                            ? "border-[1.5px] border-[#377f64] bg-[#edf8f2]"
+                            : colorType === "blue"
+                              ? "border-[1.5px] border-[#2864cf] bg-[#eef4ff]"
+                              : "border-[1.5px] border-[#c7880a] bg-[#fff6e5]"
+                          : "border-[#dfdde4] bg-[#f0f0f1] hover:bg-gray-100"
                       }`}
                     >
                       <span
                         className={`mt-1 h-[11px] w-[11px] shrink-0 rounded-full ${
-                          colorType === 'green'
-                            ? 'bg-[#319a70]'
-                            : colorType === 'blue'
-                            ? 'bg-[#2864cf]'
-                            : 'bg-[#b27c09]'
+                          colorType === "green"
+                            ? "bg-[#319a70]"
+                            : colorType === "blue"
+                              ? "bg-[#2864cf]"
+                              : "bg-[#b27c09]"
                         } shadow-[inset_0_0_0_3px_#fff]`}
                       />
                       <span>
-                        <b className="mb-[2px] block text-[11px] text-[#25212c]">{name}</b>
-                        <small className="block text-[9px] text-[#827c92]">{desc}</small>
+                        <b className="mb-[2px] block text-[11px] text-[#25212c]">
+                          {name}
+                        </b>
+                        <small className="block text-[9px] text-[#827c92]">
+                          {desc}
+                        </small>
                       </span>
                     </button>
                   ))}
@@ -454,7 +542,7 @@ export default function AddCarPage() {
               >
                 <textarea
                   value={form.notes}
-                  onChange={(e) => set('notes', e.target.value)}
+                  onChange={(e) => set("notes", e.target.value)}
                   placeholder="Condition, history, standout features…"
                   className="block h-[65px] w-full resize-y rounded-[9px] border border-[#dcdbe1] bg-[#f1f1f2] p-[10px] text-[11px] text-[#25212c] outline-none focus:border-[#3f003d]"
                 />
@@ -479,15 +567,20 @@ export default function AddCarPage() {
                   onClick={() => fileInputRef.current?.click()}
                 >
                   {photo ? (
-                    <img src={photo} alt="Vehicle preview" className="h-full w-full object-cover" />
+                    <img
+                      src={photo}
+                      alt="Vehicle preview"
+                      className="h-full w-full object-cover"
+                    />
                   ) : (
                     <>
                       <ImageIcon size={42} className="text-[#7d267c]" />
                       <strong className="mt-2 text-[11px] text-[#343043]">
-                        Drag a photo here or <span className="text-[#7d267c] underline">browse</span>
+                        Drag a photo here or{" "}
+                        <span className="text-[#7d267c] underline">browse</span>
                       </strong>
                       <small className="mt-1 text-[9px] text-[#928ba8]">
-                        PNG, JPG or WEBP (max 10MB)
+                        PNG, JPG or WEBP (max 5MB)
                       </small>
                       <span className="mt-3 rounded-[6px] border border-[#d7c6da] bg-white px-3 py-1.5 text-[10px] font-semibold text-[#343043]">
                         Choose file
@@ -503,7 +596,11 @@ export default function AddCarPage() {
                   />
                 </div>
 
-                {errors.photo && <p className="mt-1 text-[10px] text-red-500">{errors.photo}</p>}
+                {errors.photo && (
+                  <p className="mt-1 text-[10px] text-red-500">
+                    {errors.photo}
+                  </p>
+                )}
 
                 {/* Photo action buttons: Change and Remove */}
                 {photo && (
@@ -537,23 +634,33 @@ export default function AddCarPage() {
                 <div className="overflow-hidden rounded-[8px] border border-[#ececf0] bg-[#fafafa]">
                   <div className="relative h-[160px] overflow-hidden bg-[#eeeef0]">
                     {photo ? (
-                      <img src={photo} alt={title} className="h-full w-full object-cover" />
+                      <img
+                        src={photo}
+                        alt={title}
+                        className="h-full w-full object-cover"
+                      />
                     ) : (
                       <div className="flex h-full w-full flex-col items-center justify-center text-[#827b9c]">
                         <CarFront size={48} />
-                        <span className="mt-1 text-[10px] font-medium">Photo preview</span>
+                        <span className="mt-1 text-[10px] font-medium">
+                          Photo preview
+                        </span>
                       </div>
                     )}
                   </div>
 
                   <div className="p-3">
-                    <h3 className="mb-0.5 text-[15px] font-bold text-[#111827]">{title}</h3>
+                    <h3 className="mb-0.5 text-[15px] font-bold text-[#111827]">
+                      {title}
+                    </h3>
                     <p className="m-0 text-[11px] text-[#6f6874]">
-                      <span>{form.category || 'Category'}</span>
+                      <span>{form.category || "Category"}</span>
                       <span className="px-1">•</span>
-                      <span>{form.year || '2026'}</span>
+                      <span>{form.year || "2026"}</span>
                       <span className="px-1">•</span>
-                      <span className="font-mono">{form.registration || 'REG-XXXX'}</span>
+                      <span className="font-mono">
+                        {form.registration || "REG-XXXX"}
+                      </span>
                     </p>
 
                     <div className="my-2.5 flex justify-between gap-1 text-[9px] text-[#38323d]">
@@ -565,37 +672,53 @@ export default function AddCarPage() {
                         <Car size={13} />
                         {form.doors} doors
                       </span>
-                      <span className="flex items-center gap-1">⛽ {form.fuel}</span>
+                      <span className="flex items-center gap-1">
+                        ⛽ {form.fuel}
+                      </span>
                     </div>
 
                     <div className="grid grid-cols-3 border border-[#ececf0] text-center rounded-[6px] bg-white">
                       <div className="p-1.5">
-                        <b className="text-[11px] text-[#111827]">${form.daily || '0'}</b>
-                        <small className="block text-[8px] text-[#888]">/ day</small>
+                        <b className="text-[11px] text-[#111827]">
+                          ${form.daily || "0"}
+                        </b>
+                        <small className="block text-[8px] text-[#888]">
+                          / day
+                        </small>
                       </div>
                       <div className="border-x border-[#ececf0] p-1.5">
-                        <b className="text-[11px] text-[#111827]">${form.weekly || '0'}</b>
-                        <small className="block text-[8px] text-[#888]">/ week</small>
+                        <b className="text-[11px] text-[#111827]">
+                          ${form.weekly || "0"}
+                        </b>
+                        <small className="block text-[8px] text-[#888]">
+                          / week
+                        </small>
                       </div>
                       <div className="p-1.5">
-                        <b className="text-[11px] text-[#111827]">${form.monthly || '0'}</b>
-                        <small className="block text-[8px] text-[#888]">/ month</small>
+                        <b className="text-[11px] text-[#111827]">
+                          ${form.monthly || "0"}
+                        </b>
+                        <small className="block text-[8px] text-[#888]">
+                          / month
+                        </small>
                       </div>
                     </div>
 
                     <div className="mt-2.5 flex items-center justify-between text-[10px]">
                       <span
                         className={`inline-flex items-center gap-1 font-semibold ${
-                          form.status === 'Available'
-                            ? 'text-[#21865d]'
-                            : form.status === 'Rented'
-                            ? 'text-[#2167d9]'
-                            : 'text-[#c7880a]'
+                          form.status === "Available"
+                            ? "text-[#21865d]"
+                            : form.status === "Rented"
+                              ? "text-[#2167d9]"
+                              : "text-[#c7880a]"
                         }`}
                       >
                         ● {form.status}
                       </span>
-                      <span className="text-[9px] text-gray-500">{form.transmission}</span>
+                      <span className="text-[9px] text-gray-500">
+                        {form.transmission}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -607,7 +730,9 @@ export default function AddCarPage() {
                   <Globe2 size={21} />
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col">
-                  <b className="text-[11px] text-[#25212c]">Show in public catalog</b>
+                  <b className="text-[11px] text-[#25212c]">
+                    Show in public catalog
+                  </b>
                   <span className="text-[9px] text-[#928ba8]">
                     When enabled, this car will be visible to customers.
                   </span>
@@ -615,14 +740,14 @@ export default function AddCarPage() {
                 <button
                   type="button"
                   aria-label="Toggle public catalog"
-                  onClick={() => set('public', !form.public)}
+                  onClick={() => set("public", !form.public)}
                   className={`relative h-[28px] w-[48px] rounded-full p-[2px] transition-colors ${
-                    form.public ? 'bg-[#3f003d]' : 'bg-[#ddd]'
+                    form.public ? "bg-[#3f003d]" : "bg-[#ddd]"
                   }`}
                 >
                   <span
                     className={`block h-6 w-6 rounded-full bg-white shadow-xs transition-transform ${
-                      form.public ? 'translate-x-5' : 'translate-x-0'
+                      form.public ? "translate-x-5" : "translate-x-0"
                     }`}
                   />
                 </button>

@@ -31,6 +31,8 @@ function validateCar(body, partial = false) {
     "fuelType",
     "seats",
     "pricePerDay",
+    "pricePerWeek",
+    "pricePerMonth",
   ];
   if (!partial)
     for (const f of required)
@@ -64,8 +66,12 @@ function validateCar(body, partial = false) {
     Number(body.mileage) < 0
   )
     errors.push("mileage cannot be negative");
-  if (body.pricePerDay !== undefined && Number(body.pricePerDay) < 0)
-    errors.push("pricePerDay cannot be negative");
+  if (body.pricePerDay !== undefined && Number(body.pricePerDay) <= 0)
+    errors.push("pricePerDay must be greater than 0");
+  if (body.pricePerWeek !== undefined && Number(body.pricePerWeek) <= 0)
+    errors.push("pricePerWeek must be greater than 0");
+  if (body.pricePerMonth !== undefined && Number(body.pricePerMonth) <= 0)
+    errors.push("pricePerMonth must be greater than 0");
   if (
     body.transmission !== undefined &&
     !["Automatic", "Manual"].includes(body.transmission)
@@ -129,6 +135,8 @@ const createCar = async (req, res, next) => {
       doors: req.body.doors === "" ? null : Number(req.body.doors),
       mileage: req.body.mileage === "" ? null : Number(req.body.mileage),
       pricePerDay: Number(req.body.pricePerDay),
+      pricePerWeek: Number(req.body.pricePerWeek),
+      pricePerMonth: Number(req.body.pricePerMonth),
       registrationNumber: req.body.registrationNumber.trim(),
       image,
       isActive:
@@ -261,6 +269,8 @@ const updateCar = async (req, res, next) => {
       "doors",
       "mileage",
       "pricePerDay",
+      "pricePerWeek",
+      "pricePerMonth",
       "status",
       "description",
     ])
@@ -276,6 +286,10 @@ const updateCar = async (req, res, next) => {
       data.mileage = data.mileage === "" ? null : Number(data.mileage);
     if (data.pricePerDay !== undefined)
       data.pricePerDay = Number(data.pricePerDay);
+    if (data.pricePerWeek !== undefined)
+      data.pricePerWeek = Number(data.pricePerWeek);
+    if (data.pricePerMonth !== undefined)
+      data.pricePerMonth = Number(data.pricePerMonth);
     if (data.registrationNumber !== undefined)
       data.registrationNumber = String(data.registrationNumber).trim();
     if (req.body.isActive !== undefined)
