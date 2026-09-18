@@ -19,7 +19,6 @@ SELECT
   c.price_per_month AS pricePerMonth,
   c.status,
   c.description,
-  c.image,
   c.is_active AS isActive,
   c.created_at AS createdAt,
   c.updated_at AS updatedAt,
@@ -30,40 +29,45 @@ LEFT JOIN brands b ON b.id = c.brand_id
 LEFT JOIN car_categories cat ON cat.id = c.category_id
 `;
 
+async function getImages(carId) {
+  const [rows] = await pool.execute(
+    `
+    SELECT
+      id,
+      image_url AS imageUrl,
+      public_id AS publicId,
+      sort_order AS sortOrder,
+      created_at AS createdAt
+    FROM car_images
+    WHERE car_id = ?
+    ORDER BY sort_order ASC, id ASC
+    `,
+    [carId],
+  );
+  return rows;
+}
+
+async function attachImages(car) {
+  if (!car) return null;
+  return { ...car, images: await getImages(car.id) };
+}
+
 async function findById(id) {
   const [rows] = await pool.execute(
     `${SELECT} WHERE c.id = ? LIMIT 1`,
     [id],
   );
-
-  return rows[0] || null;
+  return attachImages(rows[0] || null);
 }
 
-async function findByRegistrationNumber(
-  registrationNumber,
-  excludeId = null,
-) {
+async function findByRegistrationNumber(registrationNumber, excludeId = null) {
   const sql = excludeId
-    ? `
-      SELECT id
-      FROM cars
-      WHERE registration_number = ?
-      AND id <> ?
-      LIMIT 1
-    `
-    : `
-      SELECT id
-      FROM cars
-      WHERE registration_number = ?
-      LIMIT 1
-    `;
-
+    ? `SELECT id FROM cars WHERE registration_number = ? AND id <> ? LIMIT 1`
+    : `SELECT id FROM cars WHERE registration_number = ? LIMIT 1`;
   const params = excludeId
     ? [registrationNumber, excludeId]
     : [registrationNumber];
-
   const [rows] = await pool.execute(sql, params);
-
   return rows[0] || null;
 }
 
@@ -72,7 +76,6 @@ async function brandExists(id) {
     "SELECT id FROM brands WHERE id = ? LIMIT 1",
     [id],
   );
-
   return rows.length > 0;
 }
 
@@ -81,59 +84,64 @@ async function categoryExists(id) {
     "SELECT id FROM car_categories WHERE id = ? LIMIT 1",
     [id],
   );
-
   return rows.length > 0;
 }
 
 async function create(data) {
-  const [result] = await pool.execute(
-    `
-    INSERT INTO cars
-    (
-      brand_id,
-      category_id,
-      model,
-      year,
-      registration_number,
-      color,
-      transmission,
-      fuel_type,
-      seats,
-      doors,
-      mileage,
-      price_per_day,
-      price_per_week,
-      price_per_month,
-      status,
-      description,
-      image,
-      is_active
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `,
-    [
-      data.brandId,
-      data.categoryId,
-      data.model,
-      data.year,
-      data.registrationNumber,
-      data.color ?? null,
-      data.transmission,
-      data.fuelType,
-      data.seats,
-      data.doors ?? null,
-      data.mileage ?? null,
-      data.pricePerDay,
-      data.pricePerWeek,
-      data.pricePerMonth,
-      data.status ?? "Available",
-      data.description ?? null,
-      data.image ?? null,
-      data.isActive ?? true,
-    ],
-  );
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
 
-  return findById(result.insertId);
+    const [result] = await connection.execute(
+      `
+      INSERT INTO cars
+      (
+        brand_id, category_id, model, year, registration_number, color,
+        transmission, fuel_type, seats, doors, mileage, price_per_day,
+        price_per_week, price_per_month, status, description, is_active
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        data.brandId,
+        data.categoryId,
+        data.model,
+        data.year,
+        data.registrationNumber,
+        data.color ?? null,
+        data.transmission,
+        data.fuelType,
+        data.seats,
+        data.doors ?? null,
+        data.mileage ?? null,
+        data.pricePerDay,
+        data.pricePerWeek,
+        data.pricePerMonth,
+        data.status ?? "Available",
+        data.description ?? null,
+        data.isActive ?? true,
+      ],
+    );
+
+    for (let i = 0; i < data.images.length; i += 1) {
+      const image = data.images[i];
+      await connection.execute(
+        `
+        INSERT INTO car_images (car_id, image_url, public_id, sort_order)
+        VALUES (?, ?, ?, ?)
+        `,
+        [result.insertId, image.imageUrl, image.publicId, i + 1],
+      );
+    }
+
+    await connection.commit();
+    return findById(result.insertId);
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 }
 
 async function findAll(filters = {}) {
@@ -162,73 +170,56 @@ async function findAll(filters = {}) {
   if (search) {
     conditions.push(`
       (
-        c.model LIKE ?
-        OR c.registration_number LIKE ?
-        OR c.color LIKE ?
-        OR c.description LIKE ?
+        c.model LIKE ? OR
+        c.registration_number LIKE ? OR
+        c.color LIKE ? OR
+        c.description LIKE ?
       )
     `);
-
     const searchValue = `%${search}%`;
-
-    params.push(
-      searchValue,
-      searchValue,
-      searchValue,
-      searchValue,
-    );
+    params.push(searchValue, searchValue, searchValue, searchValue);
   }
 
   if (brandId !== undefined) {
     conditions.push("c.brand_id = ?");
     params.push(brandId);
   }
-
   if (categoryId !== undefined) {
     conditions.push("c.category_id = ?");
     params.push(categoryId);
   }
-
   if (transmission !== undefined) {
     conditions.push("c.transmission = ?");
     params.push(transmission);
   }
-
   if (fuelType !== undefined) {
     conditions.push("c.fuel_type = ?");
     params.push(fuelType);
   }
-
   if (status !== undefined) {
     conditions.push("c.status = ?");
     params.push(status);
   }
-
   if (isActive !== undefined) {
     conditions.push("c.is_active = ?");
     params.push(isActive);
   }
-
   if (minPrice !== undefined) {
     conditions.push("c.price_per_day >= ?");
     params.push(minPrice);
   }
-
   if (maxPrice !== undefined) {
     conditions.push("c.price_per_day <= ?");
     params.push(maxPrice);
   }
-
   if (minYear !== undefined) {
     conditions.push("c.year >= ?");
     params.push(minYear);
   }
-
   if (maxYear !== undefined) {
     conditions.push("c.year <= ?");
     params.push(maxYear);
   }
-
   if (seats !== undefined) {
     conditions.push("c.seats = ?");
     params.push(seats);
@@ -246,18 +237,9 @@ async function findAll(filters = {}) {
     status: "c.status",
   };
 
-  const sortColumn =
-    allowedSort[sortBy] || "c.created_at";
-
-  const order =
-    String(sortOrder).toUpperCase() === "ASC"
-      ? "ASC"
-      : "DESC";
-
-  const where =
-    conditions.length > 0
-      ? `WHERE ${conditions.join(" AND ")}`
-      : "";
+  const sortColumn = allowedSort[sortBy] || "c.created_at";
+  const order = String(sortOrder).toUpperCase() === "ASC" ? "ASC" : "DESC";
+  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
 
   const [rows] = await pool.execute(
     `
@@ -266,14 +248,45 @@ async function findAll(filters = {}) {
     ORDER BY ${sortColumn} ${order}
     LIMIT ? OFFSET ?
     `,
-    [
-      ...params,
-      Number(limit),
-      Number(offset),
-    ],
+    [...params, Number(limit), Number(offset)],
   );
 
-  return rows;
+  if (!rows.length) return [];
+
+  const ids = rows.map((row) => row.id);
+  const placeholders = ids.map(() => "?").join(",");
+  const [imageRows] = await pool.execute(
+    `
+    SELECT
+      id,
+      car_id AS carId,
+      image_url AS imageUrl,
+      public_id AS publicId,
+      sort_order AS sortOrder,
+      created_at AS createdAt
+    FROM car_images
+    WHERE car_id IN (${placeholders})
+    ORDER BY car_id ASC, sort_order ASC, id ASC
+    `,
+    ids,
+  );
+
+  const imagesByCar = new Map();
+  for (const image of imageRows) {
+    if (!imagesByCar.has(image.carId)) imagesByCar.set(image.carId, []);
+    imagesByCar.get(image.carId).push({
+      id: image.id,
+      imageUrl: image.imageUrl,
+      publicId: image.publicId,
+      sortOrder: image.sortOrder,
+      createdAt: image.createdAt,
+    });
+  }
+
+  return rows.map((car) => ({
+    ...car,
+    images: imagesByCar.get(car.id) || [],
+  }));
 }
 
 async function count(filters = {}) {
@@ -282,7 +295,6 @@ async function count(filters = {}) {
     limit: 1000000,
     offset: 0,
   });
-
   return rows.length;
 }
 
@@ -304,7 +316,6 @@ async function update(id, data) {
     pricePerMonth: "price_per_month",
     status: "status",
     description: "description",
-    image: "image",
     isActive: "is_active",
   };
 
@@ -318,30 +329,57 @@ async function update(id, data) {
     }
   }
 
-  if (fields.length === 0) {
-    return findById(id);
-  }
+  if (fields.length === 0) return findById(id);
 
   params.push(id);
-
   await pool.execute(
-    `
-    UPDATE cars
-    SET ${fields.join(", ")}
-    WHERE id = ?
-    `,
+    `UPDATE cars SET ${fields.join(", ")} WHERE id = ?`,
     params,
   );
-
   return findById(id);
 }
 
-async function remove(id) {
-  const [result] = await pool.execute(
-    "DELETE FROM cars WHERE id = ?",
-    [id],
-  );
+async function replaceImages(carId, images) {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    await connection.execute("DELETE FROM car_images WHERE car_id = ?", [carId]);
 
+    for (let i = 0; i < images.length; i += 1) {
+      const image = images[i];
+      await connection.execute(
+        `
+        INSERT INTO car_images (car_id, image_url, public_id, sort_order)
+        VALUES (?, ?, ?, ?)
+        `,
+        [carId, image.imageUrl, image.publicId, i + 1],
+      );
+    }
+
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+async function getImageRecords(carId) {
+  const [rows] = await pool.execute(
+    `
+    SELECT id, image_url AS imageUrl, public_id AS publicId, sort_order AS sortOrder
+    FROM car_images
+    WHERE car_id = ?
+    ORDER BY sort_order ASC, id ASC
+    `,
+    [carId],
+  );
+  return rows;
+}
+
+async function remove(id) {
+  const [result] = await pool.execute("DELETE FROM cars WHERE id = ?", [id]);
   return result.affectedRows > 0;
 }
 
@@ -354,5 +392,8 @@ module.exports = {
   findAll,
   count,
   update,
+  getImages,
+  getImageRecords,
+  replaceImages,
   remove,
 };

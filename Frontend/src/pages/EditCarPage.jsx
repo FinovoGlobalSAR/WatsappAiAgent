@@ -21,7 +21,7 @@ export default function EditCarPage() {
     return cars.length > 0 ? cars[0] : null;
   });
   const [isSaving, setIsSaving] = useState(false);
-  const [photoFile, setPhotoFile] = useState(null);
+  const [selectedPhotos, setSelectedPhotos] = useState([]);
   const [errors, setErrors] = useState({});
 
   // Sync form if target car changes
@@ -33,7 +33,7 @@ export default function EditCarPage() {
   }, [id, getCarById, cars, car?.id]);
 
   useEffect(() => {
-    setPhotoFile(null);
+    setSelectedPhotos([]);
   }, [id]);
 
   const update = (k, v) => {
@@ -64,6 +64,12 @@ export default function EditCarPage() {
     ) {
       errs.monthly = "Monthly rate must be a valid positive amount";
     }
+    if (
+      selectedPhotos.length > 0 &&
+      (selectedPhotos.length < 4 || selectedPhotos.length > 6)
+    ) {
+      errs.photo = "Replacement upload must contain 4 to 6 images";
+    }
     return errs;
   };
 
@@ -80,7 +86,17 @@ export default function EditCarPage() {
     setIsSaving(true);
 
     try {
-      await updateCar(car.id, car, photoFile);
+      await updateCar(
+        car.id,
+        {
+          ...car,
+          photos:
+            selectedPhotos.length > 0
+              ? selectedPhotos.map((item) => item.preview)
+              : car.photos,
+        },
+        selectedPhotos.map((item) => item.file),
+      );
       navigate("/cars", {
         state: {
           toast: `Vehicle ${car.brand} ${car.model} updated successfully!`,
@@ -220,14 +236,36 @@ export default function EditCarPage() {
             {/* Right Column: Photo, Live Preview, Catalog Visibility */}
             <div className="min-w-0">
               <EditPhoto
-                photo={car.photo}
-                onChangePhoto={(newPhoto, file) => {
-                  update("photo", newPhoto);
-                  setPhotoFile(file || null);
+                photos={car.photos || (car.photo ? [car.photo] : [])}
+                selectedPhotos={selectedPhotos}
+                onChangePhotos={(nextPhotos) => {
+                  setSelectedPhotos(nextPhotos);
+                  if (nextPhotos.length > 0) {
+                    update(
+                      "photos",
+                      nextPhotos.map((item) => item.preview),
+                    );
+                    update("photo", nextPhotos[0].preview);
+                  } else {
+                    update("photos", car.photos || []);
+                    update("photo", car.photos?.[0] || null);
+                  }
                 }}
-                onRemovePhoto={() => {
-                  update("photo", null);
-                  setPhotoFile(null);
+                onRemoveSelectedPhoto={(index) => {
+                  setSelectedPhotos((current) => {
+                    const next = current.filter((_, i) => i !== index);
+                    if (next.length === 0) {
+                      update("photos", car.photos || []);
+                      update("photo", car.photos?.[0] || null);
+                    } else {
+                      update(
+                        "photos",
+                        next.map((item) => item.preview),
+                      );
+                      update("photo", next[0].preview);
+                    }
+                    return next;
+                  });
                 }}
               />
               <EditPreview car={car} />

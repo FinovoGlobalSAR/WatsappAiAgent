@@ -58,8 +58,8 @@ export default function AddCarPage() {
     notes: "",
   });
 
-  const [photo, setPhoto] = useState(null);
-  const [photoFile, setPhotoFile] = useState(null);
+  const [photos, setPhotos] = useState([]);
+  const [photoFiles, setPhotoFiles] = useState([]);
 
   const set = (k, v) => {
     setForm((f) => ({ ...f, [k]: v }));
@@ -79,37 +79,67 @@ export default function AddCarPage() {
   const count = (k, d) =>
     setForm((f) => ({ ...f, [k]: Math.max(1, (Number(f[k]) || 1) + d) }));
 
-  const onFile = (file) => {
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
+  const onFiles = (fileList) => {
+    const selected = Array.from(fileList || []);
+    if (!selected.length) return;
+
+    const validTypes = ["image/png", "image/jpeg", "image/webp"];
+    const invalid = selected.find(
+      (file) => !validTypes.includes(file.type) || file.size > 5 * 1024 * 1024,
+    );
+
+    if (invalid) {
       setErrors((prev) => ({
         ...prev,
-        photo: "Photo must be 5MB or smaller.",
-      }));
-      return;
-    }
-    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
-      setErrors((prev) => ({
-        ...prev,
-        photo: "Please choose a PNG, JPG or WEBP image.",
+        photo:
+          invalid.size > 5 * 1024 * 1024
+            ? `"${invalid.name}" is larger than 5MB.`
+            : `"${invalid.name}" is not a PNG, JPG or WEBP image.`,
       }));
       return;
     }
 
-    setPhotoFile(file);
+    if (selected.length < 4 || selected.length > 6) {
+      setErrors((prev) => ({
+        ...prev,
+        photo: "Please select between 4 and 6 car images.",
+      }));
+      return;
+    }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setPhoto(e.target.result);
-      setErrors((prev) => ({ ...prev, photo: null }));
-    };
-    reader.readAsDataURL(file);
+    const nextPhotos = selected.map((file) => ({
+      file,
+      preview: URL.createObjectURL(file),
+    }));
+
+    setPhotoFiles(selected);
+    setPhotos(nextPhotos);
+    setErrors((prev) => ({ ...prev, photo: null }));
   };
 
-  const handleRemovePhoto = (e) => {
+  const handleRemovePhoto = (index, e) => {
     e?.stopPropagation();
-    setPhoto(null);
-    setPhotoFile(null);
+
+    setPhotos((current) => {
+      const removed = current[index];
+      if (removed?.preview?.startsWith("blob:")) {
+        URL.revokeObjectURL(removed.preview);
+      }
+      const next = current.filter((_, i) => i !== index);
+      setPhotoFiles(next.map((item) => item.file));
+      return next;
+    });
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleRemoveAllPhotos = (e) => {
+    e?.stopPropagation();
+    photos.forEach((item) => {
+      if (item.preview?.startsWith("blob:")) URL.revokeObjectURL(item.preview);
+    });
+    setPhotos([]);
+    setPhotoFiles([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -138,8 +168,8 @@ export default function AddCarPage() {
     ) {
       errs.monthly = "Monthly rate must be a valid positive amount";
     }
-    if (!photoFile) {
-      errs.photo = "Car image is required";
+    if (photoFiles.length < 4 || photoFiles.length > 6) {
+      errs.photo = "Please select between 4 and 6 car images";
     }
     return errs;
   };
@@ -158,8 +188,8 @@ export default function AddCarPage() {
     try {
       await addCar({
         ...form,
-        photo,
-        photoFile,
+        photos: photos.map((item) => item.preview),
+        photoFiles,
       });
 
       navigate("/cars", {
@@ -554,45 +584,82 @@ export default function AddCarPage() {
               {/* Photo Upload Card */}
               <SectionCard
                 icon={<ImageIcon size={19} />}
-                title="Photo"
-                subtitle="Add a high-quality photo of the vehicle"
+                title="Photos"
+                subtitle="Upload 4 to 6 high-quality photos of the vehicle"
               >
                 <div
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={(e) => {
                     e.preventDefault();
-                    onFile(e.dataTransfer.files?.[0]);
+                    onFiles(e.dataTransfer.files);
                   }}
-                  className="relative flex h-[194px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[8px] border-[1.5px] border-dashed border-[#7d267c] bg-[#f6f0f7] transition-colors hover:bg-[#f2eaf3]"
-                  onClick={() => fileInputRef.current?.click()}
+                  className="relative overflow-hidden rounded-[8px] border-[1.5px] border-dashed border-[#7d267c] bg-[#f6f0f7] p-2 transition-colors hover:bg-[#f2eaf3]"
                 >
-                  {photo ? (
-                    <img
-                      src={photo}
-                      alt="Vehicle preview"
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
+                  {photos.length ? (
                     <>
+                      <div className="relative h-[170px] overflow-hidden rounded-[7px] bg-[#eeeef0]">
+                        <img
+                          src={photos[0].preview}
+                          alt="Primary vehicle preview"
+                          className="h-full w-full object-cover"
+                        />
+                        <span className="absolute left-2 top-2 rounded-[5px] bg-[#3f003d] px-2 py-1 text-[9px] font-semibold text-white">
+                          Main photo
+                        </span>
+                      </div>
+
+                      <div className="mt-2 grid grid-cols-5 gap-1.5">
+                        {photos.map((item, index) => (
+                          <div
+                            key={`${item.file.name}-${item.file.size}-${index}`}
+                            className="group relative h-[42px] overflow-hidden rounded-[5px] border border-[#d7c6da] bg-white"
+                          >
+                            <img
+                              src={item.preview}
+                              alt={`Vehicle ${index + 1}`}
+                              className="h-full w-full object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={(e) => handleRemovePhoto(index, e)}
+                              className="absolute right-0.5 top-0.5 grid h-4 w-4 place-items-center rounded-full bg-white/90 text-red-600 opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
+                              title={`Remove image ${index + 1}`}
+                            >
+                              ×
+                            </button>
+                            <span className="absolute bottom-0 left-0 rounded-tr-[3px] bg-black/55 px-1 text-[7px] text-white">
+                              {index + 1}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <div
+                      className="flex h-[194px] cursor-pointer flex-col items-center justify-center"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
                       <ImageIcon size={42} className="text-[#7d267c]" />
                       <strong className="mt-2 text-[11px] text-[#343043]">
-                        Drag a photo here or{" "}
+                        Drag 4–6 photos here or{" "}
                         <span className="text-[#7d267c] underline">browse</span>
                       </strong>
                       <small className="mt-1 text-[9px] text-[#928ba8]">
-                        PNG, JPG or WEBP (max 5MB)
+                        PNG, JPG or WEBP • each max 5MB • 4–6 images required
                       </small>
                       <span className="mt-3 rounded-[6px] border border-[#d7c6da] bg-white px-3 py-1.5 text-[10px] font-semibold text-[#343043]">
-                        Choose file
+                        Choose photos
                       </span>
-                    </>
+                    </div>
                   )}
+
                   <input
                     ref={fileInputRef}
                     className="hidden"
                     type="file"
+                    multiple
                     accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
-                    onChange={(e) => onFile(e.target.files?.[0])}
+                    onChange={(e) => onFiles(e.target.files)}
                   />
                 </div>
 
@@ -602,8 +669,7 @@ export default function AddCarPage() {
                   </p>
                 )}
 
-                {/* Photo action buttons: Change and Remove */}
-                {photo && (
+                {photos.length > 0 && (
                   <div className="mt-2.5 flex gap-2">
                     <button
                       type="button"
@@ -611,15 +677,15 @@ export default function AddCarPage() {
                       className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-[7px] border border-[#4c2d5c] bg-white text-[11px] font-semibold text-[#4c2d5c] hover:bg-[#faf5fc]"
                     >
                       <Upload size={14} />
-                      <span>Change photo</span>
+                      <span>Change photos</span>
                     </button>
                     <button
                       type="button"
-                      onClick={handleRemovePhoto}
+                      onClick={handleRemoveAllPhotos}
                       className="flex h-8 items-center justify-center gap-1.5 rounded-[7px] border border-red-300 bg-white px-3 text-[11px] font-semibold text-red-600 hover:bg-red-50"
                     >
                       <Trash2 size={14} />
-                      <span>Remove</span>
+                      <span>Remove all</span>
                     </button>
                   </div>
                 )}
@@ -633,9 +699,9 @@ export default function AddCarPage() {
               >
                 <div className="overflow-hidden rounded-[8px] border border-[#ececf0] bg-[#fafafa]">
                   <div className="relative h-[160px] overflow-hidden bg-[#eeeef0]">
-                    {photo ? (
+                    {photos.length ? (
                       <img
-                        src={photo}
+                        src={photos[0].preview}
                         alt={title}
                         className="h-full w-full object-cover"
                       />

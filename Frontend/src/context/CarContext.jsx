@@ -6,26 +6,79 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import {
+  getAccessToken,
+  getRefreshToken,
+  setTokens,
+  clearTokens,
+} from "../lib/tokenStorage";
 
 const CarContext = createContext(null);
 
 const API_ORIGIN = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/$/, "");
 const API_BASE = `${API_ORIGIN}/api/v1`;
 
+let isRefreshing = false;
+let refreshQueue = [];
+
 function getImageUrl(image) {
   if (!image) return null;
-  if (image.startsWith("http://") || image.startsWith("https://") || image.startsWith("data:")) {
+  if (
+    image.startsWith("http://") ||
+    image.startsWith("https://") ||
+    image.startsWith("data:")
+  ) {
     return image;
   }
   return `${API_ORIGIN}${image.startsWith("/") ? image : `/${image}`}`;
 }
 
-async function apiRequest(path, options = {}) {
+function processQueue(error, token = null) {
+  refreshQueue.forEach(({ resolve, reject }) => {
+    if (error) reject(error);
+    else resolve(token);
+  });
+  refreshQueue = [];
+}
+
+async function doRefresh() {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) throw new Error("No refresh token");
+
+  const response = await fetch(`${API_BASE}/auth/refresh`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refreshToken }),
+  });
+
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(body.message || "Refresh failed");
+  }
+
+  const tokens = body.data?.tokens;
+  if (!tokens?.accessToken) throw new Error("Invalid refresh response");
+
+  setTokens({
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+  });
+
+  return tokens.accessToken;
+}
+
+async function apiRequest(path, options = {}, isRetry = false) {
+  const accessToken = getAccessToken();
+
   const headers = { ...(options.headers || {}) };
 
-  // Do not send Authorization here. CRUD testing is intentionally unauthenticated.
+  // Browser must set the multipart boundary for FormData itself.
   if (!(options.body instanceof FormData) && options.body !== undefined) {
     headers["Content-Type"] = "application/json";
+  }
+
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
   }
 
   const response = await fetch(`${API_BASE}${path}`, {
@@ -41,10 +94,54 @@ async function apiRequest(path, options = {}) {
     body = { message: text };
   }
 
+  if (
+    response.status === 401 &&
+    body.code === "TOKEN_EXPIRED" &&
+    !isRetry
+  ) {
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        refreshQueue.push({ resolve, reject });
+      }).then((newToken) =>
+        apiRequest(
+          path,
+          {
+            ...options,
+            headers: {
+              ...(options.headers || {}),
+              Authorization: `Bearer ${newToken}`,
+            },
+          },
+          true,
+        ),
+      );
+    }
+
+    isRefreshing = true;
+    try {
+      const newToken = await doRefresh();
+      processQueue(null, newToken);
+      isRefreshing = false;
+
+      return apiRequest(path, options, true);
+    } catch (error) {
+      processQueue(error);
+      isRefreshing = false;
+      clearTokens();
+      window.location.href = "/login";
+      throw error;
+    }
+  }
+
   if (!response.ok) {
-    const details = Array.isArray(body.errors) ? `: ${body.errors.join(", ")}` : "";
-    const error = new Error(`${body.message || `Request failed (${response.status})`}${details}`);
+    const details = Array.isArray(body.errors)
+      ? `: ${body.errors.join(", ")}`
+      : "";
+    const error = new Error(
+      `${body.message || `Request failed (${response.status})`}${details}`,
+    );
     error.status = response.status;
+    error.code = body.code;
     error.body = body;
     throw error;
   }
@@ -53,10 +150,28 @@ async function apiRequest(path, options = {}) {
 }
 
 function normalizeCar(raw) {
+  const rawImages = Array.isArray(raw.images)
+    ? raw.images
+        .map((image) => {
+          if (typeof image === "string") return image;
+          return image?.imageUrl || image?.url || image?.image || null;
+        })
+        .filter(Boolean)
+        .map(getImageUrl)
+    : [];
+
+  // Backward compatibility if an older response still contains one image.
+  const fallbackImage = getImageUrl(raw.image || raw.photo);
+  const images = rawImages.length
+    ? rawImages
+    : fallbackImage
+      ? [fallbackImage]
+      : [];
+
   const daily = raw.pricePerDay ?? raw.daily ?? 0;
   const dailyNumber = Number(daily) || 0;
-  const weekly = raw.pricePerWeek ?? raw.weekly ?? (dailyNumber * 6);
-  const monthly = raw.pricePerMonth ?? raw.monthly ?? (dailyNumber * 22);
+  const weekly = raw.pricePerWeek ?? raw.weekly ?? dailyNumber * 6;
+  const monthly = raw.pricePerMonth ?? raw.monthly ?? dailyNumber * 22;
 
   return {
     id: String(raw.id),
@@ -72,16 +187,19 @@ function normalizeCar(raw) {
     monthly: String(monthly),
     price: `$${daily} / day`,
     status: raw.status || "Available",
-    photo: getImageUrl(raw.image || raw.photo),
+    images,
+    photos: images,
+    photo: images[0] || null,
     transmission: raw.transmission || "Automatic",
     seats: Number(raw.seats) || 5,
     doors: Number(raw.doors) || 4,
     fuel: raw.fuelType || raw.fuel || "Petrol",
     color: raw.color || "",
     mileage: raw.mileage == null ? "" : String(raw.mileage),
-    periods: Array.isArray(raw.periods) && raw.periods.length
-      ? raw.periods
-      : ["Daily", "Weekly", "Monthly"],
+    periods:
+      Array.isArray(raw.periods) && raw.periods.length
+        ? raw.periods
+        : ["Daily", "Weekly", "Monthly"],
     public: raw.isActive !== undefined ? Boolean(raw.isActive) : true,
     isActive: raw.isActive !== undefined ? Boolean(raw.isActive) : true,
     notes: raw.description || raw.notes || "",
@@ -93,7 +211,11 @@ function normalizeCar(raw) {
 
 async function findOrCreateLookup(endpoint, name) {
   const wanted = String(name || "").trim();
-  if (!wanted) throw new Error(`Please select a ${endpoint === "/brands" ? "brand" : "category"}.`);
+  if (!wanted) {
+    throw new Error(
+      `Please select a ${endpoint === "/brands" ? "brand" : "category"}.`,
+    );
+  }
 
   const result = await apiRequest(
     `${endpoint}?search=${encodeURIComponent(wanted)}&limit=100`,
@@ -108,24 +230,32 @@ async function findOrCreateLookup(endpoint, name) {
 
   const created = await apiRequest(endpoint, {
     method: "POST",
-    body: JSON.stringify({ name: wanted, description: `${wanted} for the car rental fleet` }),
+    body: JSON.stringify({
+      name: wanted,
+      description: `${wanted} for the car rental fleet`,
+    }),
   });
 
   if (!created.data?.id) {
-    throw new Error(`Could not create ${endpoint === "/brands" ? "brand" : "category"} "${wanted}".`);
+    throw new Error(
+      `Could not create ${endpoint === "/brands" ? "brand" : "category"} "${wanted}".`,
+    );
   }
 
   return created.data.id;
 }
 
-function buildCarFormData(carData, brandId, categoryId, imageFile = null) {
+function buildCarFormData(carData, brandId, categoryId, imageFiles = []) {
   const formData = new FormData();
 
   formData.append("brandId", String(brandId));
   formData.append("categoryId", String(categoryId));
   formData.append("model", String(carData.model || "").trim());
   formData.append("year", String(carData.year || ""));
-  formData.append("registrationNumber", String(carData.registration || "").trim());
+  formData.append(
+    "registrationNumber",
+    String(carData.registration || "").trim(),
+  );
   formData.append("color", String(carData.color || ""));
   formData.append("transmission", carData.transmission || "Automatic");
   formData.append("fuelType", carData.fuel || "Petrol");
@@ -136,12 +266,18 @@ function buildCarFormData(carData, brandId, categoryId, imageFile = null) {
   formData.append("pricePerWeek", String(carData.weekly ?? ""));
   formData.append("pricePerMonth", String(carData.monthly ?? ""));
   formData.append("status", carData.status || "Available");
-  formData.append("description", String(carData.notes || carData.description || ""));
+  formData.append(
+    "description",
+    String(carData.notes || carData.description || ""),
+  );
   formData.append("isActive", String(carData.public !== false));
 
-  if (imageFile instanceof File) {
-    formData.append("image", imageFile);
-  }
+  imageFiles.forEach((file) => {
+    if (file instanceof File) {
+      // Backend route uses upload.array("images", 6).
+      formData.append("images", file);
+    }
+  });
 
   return formData;
 }
@@ -157,8 +293,12 @@ export function CarProvider({ children }) {
     setError(null);
 
     try {
-      const result = await apiRequest("/cars?limit=100&page=1", { method: "GET" });
-      setCars(Array.isArray(result.data) ? result.data.map(normalizeCar) : []);
+      const result = await apiRequest("/cars?limit=100&page=1", {
+        method: "GET",
+      });
+      setCars(
+        Array.isArray(result.data) ? result.data.map(normalizeCar) : [],
+      );
     } catch (err) {
       setCars([]);
       setError(err.message || "Could not load cars from the backend.");
@@ -171,57 +311,94 @@ export function CarProvider({ children }) {
     refreshCars();
   }, [refreshCars]);
 
-  const stats = useMemo(() => {
-    return {
+  const stats = useMemo(
+    () => ({
       total: cars.length,
       available: cars.filter((c) => c.status === "Available").length,
       rented: cars.filter((c) => c.status === "Rented").length,
       maintenance: cars.filter((c) => c.status === "Maintenance").length,
-    };
-  }, [cars]);
+    }),
+    [cars],
+  );
 
   const addCar = useCallback(async (carData) => {
     const brandId = await findOrCreateLookup("/brands", carData.brand);
-    const categoryId = await findOrCreateLookup("/categories", carData.category);
+    const categoryId = await findOrCreateLookup(
+      "/categories",
+      carData.category,
+    );
 
-    if (!(carData.photoFile instanceof File)) {
-      throw new Error("Car image is required. Please select a PNG, JPG or WEBP image.");
+    const imageFiles = Array.isArray(carData.photoFiles)
+      ? carData.photoFiles
+      : [];
+
+    if (imageFiles.length < 4 || imageFiles.length > 6) {
+      throw new Error("Please select between 4 and 6 car images.");
     }
 
-    const formData = buildCarFormData(carData, brandId, categoryId, carData.photoFile);
+    const formData = buildCarFormData(
+      carData,
+      brandId,
+      categoryId,
+      imageFiles,
+    );
+
     const result = await apiRequest("/cars", {
       method: "POST",
       body: formData,
     });
 
     const newCar = normalizeCar(result.data);
-    // Keep the local preview visible immediately after upload.
-    if (carData.photo) newCar.photo = carData.photo;
+
+    // Keep local previews visible immediately if navigation happens before
+    // the browser has loaded the remote Cloudinary images.
+    if (Array.isArray(carData.photos) && carData.photos.length) {
+      newCar.photos = carData.photos;
+      newCar.images = carData.photos;
+      newCar.photo = carData.photos[0];
+    }
+
     setCars((prev) => [newCar, ...prev]);
     return newCar;
   }, []);
 
-  const updateCar = useCallback(async (id, carData, imageFile = null) => {
+  const updateCar = useCallback(async (id, carData, imageFiles = []) => {
     let brandId = carData.brandId;
     let categoryId = carData.categoryId;
 
-    if (!brandId || String(carData.brand || "").trim()) {
+    if (!brandId && String(carData.brand || "").trim()) {
       brandId = await findOrCreateLookup("/brands", carData.brand);
     }
-    if (!categoryId || String(carData.category || "").trim()) {
+    if (!categoryId && String(carData.category || "").trim()) {
       categoryId = await findOrCreateLookup("/categories", carData.category);
     }
 
-    const formData = buildCarFormData(carData, brandId, categoryId, imageFile);
+    const files = Array.isArray(imageFiles) ? imageFiles : [];
+
+    // The backend replaces the complete image set when files are supplied.
+    // Therefore a replacement upload must also contain 4–6 images.
+    if (files.length > 0 && (files.length < 4 || files.length > 6)) {
+      throw new Error("When replacing car images, select between 4 and 6 images.");
+    }
+
+    const formData = buildCarFormData(carData, brandId, categoryId, files);
+
     const result = await apiRequest(`/cars/${id}`, {
       method: "PUT",
       body: formData,
     });
 
     const updatedCar = normalizeCar(result.data);
-    // Keep the current local preview visible immediately after an image change.
-    if (carData.photo) updatedCar.photo = carData.photo;
-    setCars((prev) => prev.map((car) => (String(car.id) === String(id) ? updatedCar : car)));
+
+    if (Array.isArray(carData.photos) && carData.photos.length) {
+      updatedCar.photos = carData.photos;
+      updatedCar.images = carData.photos;
+      updatedCar.photo = carData.photos[0];
+    }
+
+    setCars((prev) =>
+      prev.map((car) => (String(car.id) === String(id) ? updatedCar : car)),
+    );
     return updatedCar;
   }, []);
 
@@ -241,7 +418,9 @@ export function CarProvider({ children }) {
     });
 
     const updatedCar = normalizeCar(result.data);
-    setCars((prev) => prev.map((car) => (String(car.id) === String(id) ? updatedCar : car)));
+    setCars((prev) =>
+      prev.map((car) => (String(car.id) === String(id) ? updatedCar : car)),
+    );
     return updatedCar;
   }, []);
 
@@ -250,22 +429,26 @@ export function CarProvider({ children }) {
     [cars],
   );
 
-  const value = {
-    cars,
-    stats,
-    navbarSearch,
-    setNavbarSearch,
-    loading,
-    error,
-    refreshCars,
-    addCar,
-    updateCar,
-    deleteCar,
-    updateCarStatus,
-    getCarById,
-  };
-
-  return <CarContext.Provider value={value}>{children}</CarContext.Provider>;
+  return (
+    <CarContext.Provider
+      value={{
+        cars,
+        stats,
+        navbarSearch,
+        setNavbarSearch,
+        loading,
+        error,
+        refreshCars,
+        addCar,
+        updateCar,
+        deleteCar,
+        updateCarStatus,
+        getCarById,
+      }}
+    >
+      {children}
+    </CarContext.Provider>
+  );
 }
 
 export function useCars() {
