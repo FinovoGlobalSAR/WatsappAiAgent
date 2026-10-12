@@ -9,14 +9,11 @@ import {
   Globe, 
   User, 
   Moon, 
-  Instagram, 
-  Facebook, 
-  Twitter, 
-  Linkedin, 
   Phone, 
   Mail, 
   MapPin 
 } from 'lucide-react';
+import { FaInstagram, FaFacebook, FaTwitter, FaLinkedin } from 'react-icons/fa';
 
 // Images Import from Assets
 import heroCarImg from '../assets/hero-car.jpg';
@@ -443,10 +440,10 @@ export default function AboutUs() {
               Making car rentals simple, reliable, and accessible for everyone across the region.
             </p>
             <div className="flex space-x-3 text-purple-300">
-              <a href="#" className="hover:text-amber-400 transition-colors"><Facebook className="w-4 h-4" /></a>
-              <a href="#" className="hover:text-amber-400 transition-colors"><Instagram className="w-4 h-4" /></a>
-              <a href="#" className="hover:text-amber-400 transition-colors"><Twitter className="w-4 h-4" /></a>
-              <a href="#" className="hover:text-amber-400 transition-colors"><Linkedin className="w-4 h-4" /></a>
+              <a href="#" className="hover:text-amber-400 transition-colors"><FaFacebook className="w-4 h-4" /></a>
+              <a href="#" className="hover:text-amber-400 transition-colors"><FaInstagram className="w-4 h-4" /></a>
+              <a href="#" className="hover:text-amber-400 transition-colors"><FaTwitter className="w-4 h-4" /></a>
+              <a href="#" className="hover:text-amber-400 transition-colors"><FaLinkedin className="w-4 h-4" /></a>
             </div>
           </div>
 
@@ -454,7 +451,7 @@ export default function AboutUs() {
           <div className="space-y-3">
             <h4 className="text-sm font-bold text-amber-400 uppercase tracking-wider">Quick Links</h4>
             <ul className="space-y-2 text-xs text-purple-200/80">
-              <li><Link to="/" className="hover:text-white transition-colors">Home</Link></li>
+              <li><Link to="/dashboard" className="hover:text-white transition-colors">Home</Link></li>
               <li><Link to="/cars" className="hover:text-white transition-colors">Our Fleet</Link></li>
               <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
               <li><Link to="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>

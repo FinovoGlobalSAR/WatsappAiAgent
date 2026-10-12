@@ -1,9 +1,9 @@
 import React from 'react';
 import {
     Search, Calendar, MapPin, ChevronRight, Star, ShieldCheck,
-    Clock, CheckCircle, ArrowRight, Sun, Globe, User, Car, Camera, Check, Share2, Music2, Plus, ChevronLeft, Apple, Play
+    Clock, CheckCircle, ArrowRight, Sun, Globe, User, Car, Check, Music2, Plus, ChevronLeft, Apple, Play
 } from 'lucide-react';
-
+import { FaInstagram, FaTwitter, FaLinkedin } from 'react-icons/fa';
 // Images Import
 import heroCar from '../assets/main-hero-car.png';
 import heroCar1 from '../assets/main-hero-car1.png';
@@ -27,6 +27,11 @@ import step2 from '../assets/step-choose.png';
 import step3 from '../assets/step-drive.png';
 
 import appMockup from '../assets/mobile-mockup.png';
+
+import dashpic1 from '../assets/dashpic1.png';
+import dashpic2 from '../assets/dashpic2.png';
+import dashpic3 from '../assets/dashpic3.png';
+import dashpic4 from '../assets/dashpic4.png';
 
 export default function Dashboard() {
     return (
@@ -427,77 +432,126 @@ export default function Dashboard() {
             </section>
 
             {/* --- TESTIMONIALS --- */}
-            <section className="bg-slate-50 py-20 px-6 md:px-10 text-slate-900 overflow-hidden relative">
-                <div className="max-w-7xl mx-auto space-y-12">
-                    {/* Top row reviews */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="flex items-start gap-3">
-                            <img src="https://i.pravatar.cc/80?img=12" className="w-16 h-16 rounded-full ring-4 ring-amber-300/60" />
-                            <div className="bg-[#2D0A3A] text-white rounded-2xl p-4 max-w-xs">
-                                <div className="flex justify-between items-center">
-                                    <p className="text-xs font-bold">Fatima S. <span className="text-slate-400 font-normal">(Saudia)</span></p>
-                                    <span className="text-amber-400 text-[10px]">★★★★★</span>
-                                </div>
-                                <p className="text-[11px] text-slate-300 mt-1">"Very professional service. No hidden charges. Highly recommended!"</p>
-                            </div>
-                        </div>
+            <section className="w-full bg-white py-20 px-4 flex flex-col items-center justify-center font-sans overflow-hidden">
 
-                        <div className="flex items-start gap-3 md:justify-end">
-                            <img src="https://i.pravatar.cc/80?img=45" className="w-16 h-16 rounded-full ring-4 ring-amber-300/60" />
-                            <div className="bg-[#2D0A3A] text-white rounded-2xl p-4 max-w-xs">
-                                <div className="flex justify-between items-center">
-                                    <p className="text-xs font-bold">Fatima S. <span className="text-slate-400 font-normal">(Dubai)</span></p>
-                                    <span className="text-amber-400 text-[10px]">★★★★★</span>
-                                </div>
-                                <p className="text-[11px] text-slate-300 mt-1">"Very professional service. No hidden charges. Highly recommended! 🤩✨"</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Center heading */}
-                    <div className="text-center space-y-4">
-                        <h2 className="text-5xl md:text-6xl font-extrabold text-[#2D0A3A]">What Our Customers Say</h2>
-                        <p className="text-sm text-slate-600 max-w-md mx-auto">
-                            See why customers trust us for a smooth, reliable, and stress-free rental experience.
-                        </p>
-                    </div>
-
-                    {/* Bottom row reviews */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="flex items-start gap-3">
-                            <img src="https://i.pravatar.cc/80?img=32" className="w-16 h-16 rounded-full ring-4 ring-amber-300/60" />
-                            <div className="bg-[#2D0A3A] text-white rounded-2xl p-4 max-w-xs">
-                                <div className="flex justify-between items-center">
-                                    <p className="text-xs font-bold">Fatima S. <span className="text-slate-400 font-normal">(Dubai)</span></p>
-                                    <span className="text-amber-400 text-[10px]">★★★★★</span>
-                                </div>
-                                <p className="text-[11px] text-slate-300 mt-1">"24/7 support really helped during our trip. Will rent again! 🔥"</p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-start gap-3 justify-center">
-                            <img src="https://i.pravatar.cc/80?img=47" className="w-16 h-16 rounded-full ring-4 ring-amber-300/60" />
-                            <div className="bg-[#2D0A3A] text-white rounded-2xl p-4 max-w-xs">
-                                <div className="flex justify-between items-center">
-                                    <p className="text-xs font-bold">Fatima S. <span className="text-slate-400 font-normal">(Saudia)</span></p>
-                                    <span className="text-amber-400 text-[10px]">★★★★★</span>
-                                </div>
-                                <p className="text-[11px] text-slate-300 mt-1">"24/7 support really helped during our trip. Will rent again!"</p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-start gap-3 md:justify-end">
-                            <img src="https://i.pravatar.cc/80?img=15" className="w-16 h-16 rounded-full ring-4 ring-amber-300/60" />
-                            <div className="bg-[#2D0A3A] text-white rounded-2xl p-4 max-w-xs">
-                                <div className="flex justify-between items-center">
-                                    <p className="text-xs font-bold">Khalid M. <span className="text-slate-400 font-normal">(Dubai)</span></p>
-                                    <span className="text-amber-400 text-[10px]">★★★★★</span>
-                                </div>
-                                <p className="text-[11px] text-slate-300 mt-1">"24/7 support really helped during our trip. Will rent again!"</p>
-                            </div>
-                        </div>
-                    </div>
+                {/* Header Section */}
+                <div className="text-center max-w-2xl mx-auto mb-16 z-10">
+                    <h2 className="text-4xl md:text-5xl font-extrabold text-[#2a042e] tracking-tight">
+                        What Our Customers Say
+                    </h2>
+                    <p className="text-base md:text-lg text-[#2a042e]/80 font-medium mt-4 leading-relaxed">
+                        See why customers trust us for a smooth, reliable,<br className="hidden sm:inline" /> and stress-free rental experience.
+                    </p>
                 </div>
+
+                {/* Absolute Layout Container - Matches Figma Pixel-Perfect */}
+                <div className="relative w-full max-w-5xl h-[460px] mx-auto">
+
+                    {/* Top Left - Ahmed Speech Bubble Card */}
+                    <div className="absolute top-0 left-4 sm:left-12 md:left-20 z-20">
+                        <div className="relative bg-[#2a042e] text-white rounded-3xl p-5 shadow-2xl w-[360px] sm:w-[400px] flex items-start space-x-4">
+                            <img
+                                src={dashpic1}
+                                alt="Ahmed"
+                                className="w-14 h-14 rounded-full object-cover shrink-0"
+                            />
+                            <div className="flex-1">
+                                <div className="flex items-center justify-between">
+                                    <h4 className="font-bold text-sm text-white">Ahmed</h4>
+                                    <span className="text-amber-400 text-xs tracking-widest">★★★★★</span>
+                                </div>
+                                <p className="text-[11px] text-gray-300 leading-snug mt-1 font-normal">
+                                    Smooth booking and the car was exactly as shown. Highly recommended! The service was impeccable from start to finish.
+                                </p>
+                            </div>
+                            <span className="text-purple-300/40 text-4xl font-serif leading-none select-none pl-1">
+                                ”
+                            </span>
+                            {/* Pointer / Tail of Speech Bubble */}
+                            <div className="absolute -bottom-2 left-8 w-5 h-5 bg-[#2a042e] rotate-45 rounded-sm"></div>
+                        </div>
+                    </div>
+
+                    {/* Left - Fatima S. (Dubai) */}
+                    <div className="absolute top-[210px] left-2 sm:left-8 md:left-12 z-20 flex items-center">
+                        {/* Glowing Avatar */}
+                        <div className="relative -mr-5 z-30">
+                            <div className="w-20 h-20 rounded-full bg-amber-300/60 blur-md absolute inset-0 transform scale-110"></div>
+                            <img
+                                src={dashpic2}
+                                alt="Fatima S."
+                                className="w-20 h-20 rounded-full object-cover relative z-10 border-2 border-white shadow-lg"
+                            />
+                        </div>
+
+                        {/* Card Body */}
+                        <div className="bg-[#2a042e] text-white rounded-xl p-4 pl-8 shadow-xl w-64 border border-purple-900/30">
+                            <div className="flex items-center justify-between">
+                                <div className="text-[12px] font-bold">
+                                    Fatima S. <span className="text-gray-400 font-normal text-[10px]">(Dubai)</span>
+                                </div>
+                                <span className="text-amber-400 text-[10px]">★★★★★</span>
+                            </div>
+                            <p className="text-[11px] text-gray-300 mt-2 leading-tight">
+                                "24/7 support really helped during our trip. Will rent again! 🔥"
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Bottom Center - Fatima S. (Saudia) */}
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center">
+                        {/* Glowing Avatar */}
+                        <div className="relative -mb-5 z-30">
+                            <div className="w-20 h-20 rounded-full bg-amber-300/60 blur-md absolute inset-0 transform scale-110"></div>
+                            <img
+                                src={dashpic3}
+                                alt="Fatima S."
+                                className="w-20 h-20 rounded-full object-cover relative z-10 border-2 border-white shadow-lg"
+                            />
+                        </div>
+
+                        {/* Card Body */}
+                        <div className="bg-[#2a042e] text-white rounded-xl p-4 pt-7 shadow-xl w-64 border border-purple-900/30 text-left">
+                            <div className="flex items-center justify-between">
+                                <div className="text-[12px] font-bold">
+                                    Fatima S. <span className="text-gray-400 font-normal text-[10px]">(Saudia)</span>
+                                </div>
+                                <span className="text-amber-400 text-[10px]">★★★★★</span>
+                            </div>
+                            <p className="text-[11px] text-gray-300 mt-2 leading-tight">
+                                "24/7 support really helped during our trip. Will rent again!"
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Right - Khalid M. (Dubai) */}
+                    <div className="absolute top-[200px] right-2 sm:right-8 md:right-12 z-20 flex flex-col items-end">
+                        {/* Glowing Avatar */}
+                        <div className="relative -mb-5 -mr-2 z-30">
+                            <div className="w-20 h-20 rounded-full bg-amber-300/60 blur-md absolute inset-0 transform scale-110"></div>
+                            <img
+                                src={dashpic4}
+                                alt="Khalid M."
+                                className="w-20 h-20 rounded-full object-cover relative z-10 border-2 border-white shadow-lg"
+                            />
+                        </div>
+
+                        {/* Card Body */}
+                        <div className="bg-[#2a042e] text-white rounded-xl p-4 pt-7 shadow-xl w-64 border border-purple-900/30 text-left">
+                            <div className="flex items-center justify-between">
+                                <div className="text-[12px] font-bold">
+                                    Khalid M.. <span className="text-gray-400 font-normal text-[10px]">(Dubai)</span>
+                                </div>
+                                <span className="text-amber-400 text-[10px]">★★★★★</span>
+                            </div>
+                            <p className="text-[11px] text-gray-300 mt-2 leading-tight">
+                                "24/7 support really helped during our trip. Will rent again!"
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+
             </section>
 
             {/* --- FAQ SECTION --- */}
@@ -608,13 +662,13 @@ export default function Dashboard() {
                         <p className="text-sm font-semibold">Social Links</p>
                         <div className="flex gap-2">
                             <a href="#" className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20">
-                                <camera className="w-4 h-4" />
+                                <FaInstagram className="w-4 h-4" />
                             </a>
                             <a href="#" className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20">
-                                <Share2 className="w-4 h-4" />
+                                <FaTwitter className="w-4 h-4" />
                             </a>
                             <a href="#" className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20">
-                                <Music2 className="w-4 h-4" />
+                                <FaLinkedin className="w-4 h-4" />
                             </a>
                         </div>
                     </div>
